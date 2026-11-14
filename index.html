@@ -1,0 +1,5782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <!-- Viewport responsivo para funcionar perfeitamente em celulares, tablets e computadores -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Meme Kombat Brasil - Edição Torre & Arcade</title>
+  <style>
+    /* ==========================================================================
+       1. VARIÁVEIS DE CORES E ESTILOS GERAIS (TEMA FLIPERAMA BRASIL)
+       Definimos nossa paleta de cores inspirada nos fliperamas clássicos e nas
+       cores do Brasil (verde, amarelo, azul e neon ciano).
+       ========================================================================== */
+    :root {
+      --bg-dark: #090d16;
+      --bg-panel: #111827;
+      --bg-card: #1e293b;
+      --brasil-verde: #009c3b;
+      --brasil-amarelo: #ffdf00;
+      --brasil-azul: #002776;
+      --neon-ciano: #00f0ff;
+      --neon-vermelho: #ef4444;
+      --neon-ouro: #facc15;
+      --neon-roxo: #a855f7;
+      --texto-claro: #f8fafc;
+      --texto-suave: #94a3b8;
+      --borda-arcade: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--texto-claro);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(0, 156, 59, 0.16), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(0, 39, 118, 0.28), transparent 50%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px);
+    }
+
+    /* Gerenciamento das 4 telas principais (Início, Seleção, Torre e Arena) */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       2. BOTÕES ESTILO ARCADE COM RELEVO 3D
+       ========================================================================== */
+    .btn-arcade {
+      background: linear-gradient(180deg, #ffdf00 0%, #eab308 100%);
+      color: #0f172a;
+      border: 3px solid #ffffff;
+      border-radius: 12px;
+      padding: 11px 22px;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #a16207, 0 10px 20px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+
+    .btn-arcade:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+    }
+
+    .btn-arcade:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #a16207, 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn-verde {
+      background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+      color: #ffffff;
+      box-shadow: 0 5px 0 #14532d, 0 10px 20px rgba(0, 0, 0, 0.5);
+    }
+    .btn-verde:active { box-shadow: 0 2px 0 #14532d; }
+
+    .btn-azul {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 5px 0 #1e3a8a, 0 10px 20px rgba(0, 0, 0, 0.5);
+    }
+    .btn-azul:active { box-shadow: 0 2px 0 #1e3a8a; }
+
+    .btn-roxo {
+      background: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%);
+      color: #ffffff;
+      box-shadow: 0 5px 0 #4c1d95, 0 10px 20px rgba(0, 0, 0, 0.5);
+    }
+    .btn-roxo:active { box-shadow: 0 2px 0 #4c1d95; }
+
+    .btn-vermelho {
+      background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+      color: #ffffff;
+      box-shadow: 0 5px 0 #7f1d1d, 0 10px 20px rgba(0, 0, 0, 0.5);
+    }
+    .btn-vermelho:active { box-shadow: 0 2px 0 #7f1d1d; }
+
+    .btn-secundario {
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      color: #f8fafc;
+      border: 2px solid #64748b;
+      box-shadow: 0 4px 0 #0f172a;
+      padding: 8px 15px;
+      font-size: 0.88rem;
+    }
+
+    /* ==========================================================================
+       2.5 TELA DE SELEÇÃO DE PLATAFORMA (PC vs CELULAR) E AVISO DE ROTAÇÃO
+       ========================================================================== */
+    #platform-screen {
+      justify-content: center;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      width: 100%;
+      max-width: 820px;
+    }
+
+    @media (max-width: 640px) {
+      .platform-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
+    .platform-card {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+      border: 3px solid #334155;
+      border-radius: 18px;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+    }
+
+    .platform-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .platform-card.pc:hover,
+    .platform-card.pc:focus-visible {
+      border-color: var(--neon-ciano);
+      box-shadow: 0 12px 30px rgba(0, 240, 255, 0.3);
+    }
+
+    .platform-card.mobile:hover,
+    .platform-card.mobile:focus-visible {
+      border-color: var(--neon-ouro);
+      box-shadow: 0 12px 30px rgba(250, 204, 21, 0.3);
+    }
+
+    .platform-icon {
+      font-size: 3.2rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+    }
+
+    .platform-card h2 {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: 1.55rem;
+      letter-spacing: 1.2px;
+      color: #ffffff;
+    }
+
+    .platform-card.pc h2 { color: var(--neon-ciano); }
+    .platform-card.mobile h2 { color: var(--neon-ouro); }
+
+    .platform-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.84rem;
+      color: #cbd5e1;
+      text-align: left;
+      width: 100%;
+      background: rgba(9, 13, 22, 0.6);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+
+    /* Aviso de rotação de tela exclusivo para Celular em modo retrato (em pé) */
+    #rotate-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 17, 0.96);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 14px;
+    }
+
+    body.mobile-mode:not(.ignore-rotate) #rotate-overlay {
+      display: none;
+    }
+
+    @media (orientation: portrait) {
+      body.mobile-mode:not(.ignore-rotate) #rotate-overlay {
+        display: flex;
+      }
+    }
+
+    @keyframes phoneTilt {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-90deg); }
+    }
+
+    .rotate-phone-icon {
+      font-size: 4rem;
+      display: inline-block;
+      animation: phoneTilt 1.8s ease-in-out infinite;
+    }
+
+    /* ==========================================================================
+       3. TELA INICIAL (START SCREEN)
+       ========================================================================== */
+    #start-screen {
+      justify-content: space-between;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 18px 16px;
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .badge-arcade {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid var(--neon-ciano);
+      color: var(--neon-ciano);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .game-title {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: clamp(2.3rem, 5.8vw, 4.4rem);
+      line-height: 0.95;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 0%, #ffdf00 55%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 5px 0 #002776) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.8));
+    }
+
+    .game-subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      font-weight: 800;
+      color: #4ade80;
+      letter-spacing: 2.5px;
+      margin-top: 6px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .menu-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 12px 0;
+    }
+
+    .controls-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+      width: 100%;
+      background: rgba(17, 24, 39, 0.9);
+      border: 2px solid var(--borda-arcade);
+      border-radius: 16px;
+      padding: 13px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .control-card {
+      background: rgba(30, 41, 59, 0.78);
+      border-radius: 12px;
+      padding: 11px;
+      border-left: 4px solid var(--neon-ciano);
+    }
+
+    .control-card.p2 {
+      border-left-color: var(--neon-ouro);
+    }
+
+    .control-card h3 {
+      font-size: 0.92rem;
+      margin-bottom: 8px;
+      color: var(--neon-ciano);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .control-card.p2 h3 {
+      color: var(--neon-ouro);
+    }
+
+    .key-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .key-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e2e8f0;
+    }
+
+    kbd {
+      background: #0f172a;
+      border: 1px solid #64748b;
+      border-bottom-width: 3px;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-weight: 800;
+      font-size: 0.78rem;
+      color: #ffdf00;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       4. TELA DE SELEÇÃO (LUTADORES, HISTÓRIA, DIFICULDADE, MAPAS E TEMPO)
+       ========================================================================== */
+    #select-screen {
+      justify-content: flex-start;
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 10px 14px 24px;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .select-header,
+    .select-main-area,
+    .match-settings-bar,
+    .select-actions {
+      flex-shrink: 0;
+    }
+
+    .select-header {
+      text-align: center;
+      width: 100%;
+    }
+
+    .select-header h2 {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: clamp(1.15rem, 2.5vw, 1.65rem);
+      color: #ffdf00;
+      letter-spacing: 1.5px;
+      text-shadow: 0 3px 0 #002776;
+    }
+
+    .select-main-area {
+      display: grid;
+      grid-template-columns: 215px 1fr 215px;
+      gap: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    @media (max-width: 840px) {
+      .select-main-area {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fighter-preview-panel {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.94) 0%, rgba(15, 23, 42, 0.98) 100%);
+      border: 2px solid var(--neon-ciano);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+    }
+
+    .fighter-preview-panel.p2 {
+      border-color: var(--neon-ouro);
+    }
+
+    .fighter-preview-panel.tower-info {
+      border-color: var(--neon-roxo);
+      justify-content: space-between;
+    }
+
+    .preview-tag {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.16);
+      border: 1px solid var(--neon-ciano);
+      color: var(--neon-ciano);
+      font-size: 0.68rem;
+      font-weight: 900;
+      padding: 2px 10px;
+      border-radius: 999px;
+      letter-spacing: 1px;
+    }
+
+    .fighter-preview-panel.p2 .preview-tag {
+      background: rgba(250, 204, 21, 0.16);
+      border-color: var(--neon-ouro);
+      color: var(--neon-ouro);
+    }
+
+    .fighter-preview-panel.tower-info .preview-tag {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: var(--neon-roxo);
+      color: #e9d5ff;
+    }
+
+    .preview-canvas-wrap {
+      position: relative;
+      width: 125px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(30, 41, 59, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .preview-canvas {
+      width: 125px;
+      height: 120px;
+      display: block;
+    }
+
+    .pixel-portrait-badge {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 32px;
+      height: 32px;
+      border: 2px solid #ffffff;
+      border-radius: 6px;
+      background: #090d16;
+      image-rendering: pixelated;
+    }
+
+    .preview-name {
+      font-size: 0.96rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    .preview-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    .stat-bars {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      font-weight: 900;
+      color: #cbd5e1;
+    }
+
+    .stat-row span {
+      width: 26px;
+      text-align: left;
+    }
+
+    .stat-track {
+      flex: 1;
+      height: 7px;
+      background: #090d16;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      overflow: hidden;
+    }
+
+    .stat-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #009c3b, #ffdf00);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .story-lore-box {
+      background: rgba(9, 13, 22, 0.75);
+      border: 1px solid #4c1d95;
+      border-radius: 10px;
+      padding: 9px;
+      text-align: left;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .story-lore-box strong {
+      font-size: 0.78rem;
+      color: #ffdf00;
+    }
+
+    .story-lore-box p {
+      font-size: 0.74rem;
+      line-height: 1.38;
+      color: #e2e8f0;
+    }
+
+    .roster-container {
+      background: rgba(17, 24, 39, 0.92);
+      border: 2px solid var(--borda-arcade);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 560px) {
+      .roster-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .fighter-card {
+      position: relative;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #334155;
+      border-radius: 11px;
+      padding: 8px 5px 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .fighter-card:hover {
+      transform: translateY(-2px);
+      border-color: #94a3b8;
+    }
+
+    .fighter-card.selected-p1 {
+      border-color: var(--neon-ciano);
+      background: linear-gradient(180deg, rgba(0, 240, 255, 0.22) 0%, #0f172a 100%);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+    }
+
+    .fighter-card.selected-p2 {
+      border-color: var(--neon-ouro);
+      background: linear-gradient(180deg, rgba(250, 204, 21, 0.22) 0%, #0f172a 100%);
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+    }
+
+    .fighter-card.selected-p1.selected-p2 {
+      border-color: #4ade80;
+      box-shadow: 0 0 14px rgba(74, 222, 128, 0.6);
+    }
+
+    .card-badges {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: 4px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .p-badge {
+      font-size: 0.6rem;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 5px;
+      color: #090d16;
+    }
+
+    .p-badge.p1 {
+      background: var(--neon-ciano);
+    }
+
+    .p-badge.p2 {
+      background: var(--neon-ouro);
+      margin-left: auto;
+    }
+
+    .fighter-card canvas {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #090d16;
+      image-rendering: pixelated;
+    }
+
+    .fighter-card-name {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #f8fafc;
+      text-align: center;
+      line-height: 1.15;
+    }
+
+    .roster-tools {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .select-turn-hint {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
+    /* Barra de Configurações: Coluna Esquerda (Dificuldade + Tempo) e Direita (Grade 3x3 de Mapas) */
+    .match-settings-bar {
+      display: grid;
+      grid-template-columns: 1fr 1.45fr;
+      gap: 10px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .settings-left-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 7px;
+    }
+
+    @media (max-width: 960px) {
+      .match-settings-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .setting-box {
+      background: rgba(17, 24, 39, 0.94);
+      border: 2px solid var(--borda-arcade);
+      border-radius: 12px;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .setting-box.disabled-box {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .setting-box-title {
+      font-size: 0.75rem;
+      font-weight: 900;
+      color: var(--neon-ciano);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .diff-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .arena-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .time-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .option-chip {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      padding: 5px 4px;
+      color: #e2e8f0;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.14s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .option-chip:hover {
+      border-color: #94a3b8;
+      background: #273549;
+    }
+
+    .option-chip.active {
+      background: linear-gradient(180deg, rgba(0, 240, 255, 0.22), rgba(0, 156, 59, 0.25));
+      border-color: var(--neon-ciano);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+    }
+
+    /* Cores temáticas por nível de dificuldade */
+    .option-chip.diff-facil.active { border-color: #4ade80; background: rgba(34, 197, 94, 0.25); }
+    .option-chip.diff-normal.active { border-color: #38bdf8; background: rgba(56, 189, 248, 0.25); }
+    .option-chip.diff-dificil.active { border-color: #f97316; background: rgba(249, 115, 22, 0.28); }
+    .option-chip.diff-lendario.active { border-color: #ef4444; background: rgba(239, 68, 68, 0.32); box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); }
+
+    .option-chip strong {
+      font-size: 0.78rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .option-chip small {
+      font-size: 0.62rem;
+      color: var(--texto-suave);
+    }
+
+    .option-chip.active small {
+      color: #ffdf00;
+      font-weight: 700;
+    }
+
+    .arena-thumb {
+      width: 100%;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid #475569;
+    }
+
+    .select-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* ==========================================================================
+       5. TELA DO MODO TORRE (#screen-tower) - ESCADA ARCADE DE 5 DEGRAUS
+       ========================================================================== */
+    #screen-tower {
+      justify-content: space-between;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      gap: 10px;
+    }
+
+    .tower-header {
+      text-align: center;
+    }
+
+    .tower-header h2 {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+      color: #ffdf00;
+      letter-spacing: 2px;
+      text-shadow: 0 3px 0 #4c1d95;
+    }
+
+    .tower-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 16px;
+      width: 100%;
+      flex: 1;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    @media (max-width: 860px) {
+      .tower-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Coluna Esquerda: Os 5 Degraus de Baixo para Cima */
+    .tower-ladder-box {
+      background: rgba(17, 24, 39, 0.94);
+      border: 2px solid #7e22ce;
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 7px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    }
+
+    .tower-step-card {
+      background: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .tower-step-card.boss-step {
+      background: linear-gradient(90deg, rgba(127, 29, 29, 0.55), rgba(30, 41, 59, 0.95));
+      border-color: #b91c1c;
+    }
+
+    .tower-step-card.current {
+      border-color: #ffdf00;
+      background: linear-gradient(90deg, rgba(250, 204, 21, 0.2), rgba(30, 41, 59, 0.95));
+      box-shadow: 0 0 16px rgba(255, 223, 0, 0.45);
+      transform: scale(1.015);
+    }
+
+    .tower-step-card.completed {
+      border-color: #22c55e;
+      background: rgba(20, 83, 45, 0.45);
+      opacity: 0.85;
+    }
+
+    .tower-step-card.locked {
+      opacity: 0.6;
+    }
+
+    .step-number-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #0f172a;
+      border: 2px solid #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 0.88rem;
+      flex-shrink: 0;
+    }
+
+    .tower-step-card.current .step-number-badge {
+      background: #ffdf00;
+      color: #090d16;
+      border-color: #ffffff;
+    }
+
+    .tower-step-card.completed .step-number-badge {
+      background: #22c55e;
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+
+    .step-portrait {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      border: 2px solid #94a3b8;
+      background: #090d16;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .step-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .step-name-row strong {
+      font-size: 0.92rem;
+      color: #ffffff;
+    }
+
+    .boss-tag {
+      background: linear-gradient(90deg, #ef4444, #f59e0b);
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+    }
+
+    .step-arena-label {
+      font-size: 0.74rem;
+      color: var(--texto-suave);
+    }
+
+    .step-status-pill {
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #cbd5e1;
+      white-space: nowrap;
+    }
+
+    .tower-step-card.current .step-status-pill {
+      background: #ffdf00;
+      color: #090d16;
+    }
+
+    .tower-step-card.completed .step-status-pill {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    /* Coluna Direita: Detalhes do Confronto Atual + Provocação + Dificuldade */
+    .tower-detail-box {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+      border: 2px solid var(--neon-ouro);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    }
+
+    .tower-vs-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: rgba(9, 13, 22, 0.75);
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid #334155;
+    }
+
+    .tower-fighter-mini {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .tower-fighter-mini canvas {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      border: 2px solid var(--neon-ciano);
+      background: #0f172a;
+      image-rendering: pixelated;
+    }
+
+    .tower-fighter-mini.enemy canvas {
+      border-color: var(--neon-vermelho);
+      transform: scaleX(-1);
+    }
+
+    .tower-vs-text {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: 1.8rem;
+      color: #ffdf00;
+      text-shadow: 0 3px 0 #ef4444;
+    }
+
+    .taunt-bubble {
+      background: #0f172a;
+      border-left: 4px solid #ef4444;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .taunt-bubble small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: #f87171;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .taunt-bubble p {
+      font-size: 0.88rem;
+      font-style: italic;
+      color: #f8fafc;
+      line-height: 1.35;
+    }
+
+    .tower-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .tower-actions .btn-arcade {
+      flex: 1;
+      min-width: 170px;
+    }
+
+    /* ==========================================================================
+       6. TELA DE BATALHA E HUD SUPERIOR
+       ========================================================================== */
+    #battle-screen {
+      padding: 0;
+      justify-content: flex-start;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #battle-hud {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(9, 13, 22, 0.96) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border-bottom: 2px solid #334155;
+      padding: 6px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .player-hud {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-hud.p2 {
+      flex-direction: row-reverse;
+    }
+
+    .hud-portrait {
+      width: 54px;
+      height: 54px;
+      border: 2px solid var(--neon-ciano);
+      border-radius: 10px;
+      background: #0f172a;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    }
+
+    .player-hud.p2 .hud-portrait {
+      border-color: var(--neon-ouro);
+      transform: scaleX(-1);
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+    }
+
+    @keyframes portraitDamageShake {
+      0%, 100% { transform: translateX(0); filter: none; }
+      25% { transform: translateX(-4px); filter: brightness(1.8) sepia(1) hue-rotate(-50deg); border-color: #ef4444; }
+      75% { transform: translateX(4px); filter: brightness(1.6) sepia(1) hue-rotate(-50deg); border-color: #ef4444; }
+    }
+    @keyframes portraitDamageShakeP2 {
+      0%, 100% { transform: scaleX(-1) translateX(0); filter: none; }
+      25% { transform: scaleX(-1) translateX(-4px); filter: brightness(1.8) sepia(1) hue-rotate(-50deg); border-color: #ef4444; }
+      75% { transform: scaleX(-1) translateX(4px); filter: brightness(1.6) sepia(1) hue-rotate(-50deg); border-color: #ef4444; }
+    }
+    .hud-portrait.portrait-hit {
+      animation: portraitDamageShake 0.25s ease;
+    }
+    .player-hud.p2 .hud-portrait.portrait-hit {
+      animation: portraitDamageShakeP2 0.25s ease;
+    }
+
+    .hud-bars-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .hud-name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      gap: 6px;
+    }
+
+    .player-hud.p2 .hud-name-row {
+      flex-direction: row-reverse;
+    }
+
+    .hud-name-badges {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .player-hud.p2 .hud-name-badges {
+      flex-direction: row-reverse;
+    }
+
+    .hud-cpu-badge {
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: #334155;
+      color: #ffdf00;
+      border: 1px solid #64748b;
+      white-space: nowrap;
+    }
+
+    .hud-boss-badge {
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: #dc2626;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .round-dots {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .round-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid #64748b;
+    }
+
+    .round-dot.won {
+      background: #ffdf00;
+      border-color: #ffffff;
+      box-shadow: 0 0 8px #ffdf00;
+    }
+
+    /* Barra de Vida Inclinada + Barra Fantasma + Número de HP */
+    .hp-bar-outer {
+      width: 100%;
+      height: 18px;
+      background: #1e293b;
+      border: 2px solid #ffffff;
+      border-radius: 5px;
+      transform: skewX(-16deg);
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .player-hud.p2 .hp-bar-outer {
+      transform: skewX(16deg);
+    }
+
+    .hp-ghost-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #f97316;
+      transition: width 0.35s ease-out;
+    }
+
+    .player-hud.p2 .hp-ghost-fill {
+      left: auto;
+      right: 0;
+    }
+
+    .hp-bar-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(90deg, #16a34a 0%, #4ade80 60%, #fef08a 100%);
+      transition: width 0.08s linear;
+    }
+
+    .player-hud.p2 .hp-bar-fill {
+      left: auto;
+      right: 0;
+      background: linear-gradient(270deg, #16a34a 0%, #4ade80 60%, #fef08a 100%);
+    }
+
+    .hp-bar-outer.low-hp .hp-bar-fill {
+      background: linear-gradient(90deg, #991b1b, #ef4444);
+    }
+
+    .hp-numeric-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.66rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 1px 2px #000000, 0 0 4px #000000;
+      transform: skewX(16deg);
+      pointer-events: none;
+    }
+
+    .player-hud.p2 .hp-numeric-text {
+      transform: skewX(-16deg);
+    }
+
+    @keyframes hudDamageShake {
+      0%, 100% { transform: skewX(-16deg) translateX(0); border-color: #ffffff; }
+      25% { transform: skewX(-16deg) translateX(-5px); border-color: #ef4444; background: #7f1d1d; }
+      75% { transform: skewX(-16deg) translateX(5px); border-color: #ef4444; }
+    }
+    @keyframes hudDamageShakeP2 {
+      0%, 100% { transform: skewX(16deg) translateX(0); border-color: #ffffff; }
+      25% { transform: skewX(16deg) translateX(5px); border-color: #ef4444; background: #7f1d1d; }
+      75% { transform: skewX(16deg) translateX(-5px); border-color: #ef4444; }
+    }
+    .hp-bar-outer.damage-flash {
+      animation: hudDamageShake 0.24s ease;
+    }
+    .player-hud.p2 .hp-bar-outer.damage-flash {
+      animation: hudDamageShakeP2 0.24s ease;
+    }
+
+    /* Super e Fôlego */
+    .sub-bars-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .mini-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .mini-bar-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mini-bar-track {
+      height: 6px;
+      background: #0f172a;
+      border-radius: 4px;
+      border: 1px solid #475569;
+      overflow: hidden;
+    }
+
+    .super-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #3b82f6, #00f0ff);
+      transition: width 0.1s linear;
+    }
+
+    .super-fill.ready {
+      background: linear-gradient(90deg, #f59e0b, #ffdf00, #ffffff);
+      box-shadow: 0 0 8px #ffdf00;
+    }
+
+    .stamina-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      transition: width 0.08s linear;
+    }
+
+    .stamina-fill.exhausted {
+      background: #ef4444;
+    }
+
+    /* 3 Blocos do Escudo + Barra de Regeneração Passiva */
+    .shield-hud-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 1px;
+    }
+
+    .player-hud.p2 .shield-hud-row {
+      flex-direction: row-reverse;
+    }
+
+    .shield-pips {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .player-hud.p2 .shield-pips {
+      flex-direction: row-reverse;
+    }
+
+    .shield-pip {
+      width: 15px;
+      height: 6px;
+      border-radius: 3px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .shield-pip.hp-3 {
+      background: #00f0ff;
+      border-color: #ffffff;
+      box-shadow: 0 0 6px rgba(0, 240, 255, 0.8);
+    }
+
+    .shield-pip.hp-2 {
+      background: #facc15;
+      border-color: #fef08a;
+      box-shadow: 0 0 6px rgba(250, 204, 21, 0.7);
+    }
+
+    .shield-pip.hp-1 {
+      background: #ef4444;
+      border-color: #fca5a5;
+      box-shadow: 0 0 7px rgba(239, 68, 68, 0.9);
+      animation: pulseRed 0.55s infinite alternate;
+    }
+
+    @keyframes pulseRed {
+      from { opacity: 0.65; }
+      to { opacity: 1; }
+    }
+
+    .shield-regen-track {
+      flex: 1;
+      height: 6px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .shield-regen-fill {
+      height: 100%;
+      width: 100%;
+      background: #00f0ff;
+      transition: width 0.06s linear, background 0.15s ease;
+    }
+
+    .shield-regen-fill.regenerating {
+      background: linear-gradient(90deg, #0284c7, #00f0ff, #a5f3fc);
+      box-shadow: 0 0 6px #00f0ff;
+    }
+
+    .shield-regen-fill.broken {
+      background: linear-gradient(90deg, #991b1b, #ef4444);
+    }
+
+    .shield-status-text {
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: #38bdf8;
+      white-space: nowrap;
+      min-width: 66px;
+      text-align: right;
+    }
+
+    .player-hud.p2 .shield-status-text {
+      text-align: left;
+    }
+
+    /* Relógio Central */
+    .hud-center-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      border: 2px solid var(--brasil-amarelo);
+      border-radius: 12px;
+      padding: 4px 12px;
+      min-width: 86px;
+      box-shadow: 0 0 15px rgba(255, 223, 0, 0.25);
+    }
+
+    .round-label {
+      font-size: 0.63rem;
+      font-weight: 900;
+      color: #4ade80;
+      letter-spacing: 0.8px;
+      text-align: center;
+    }
+
+    .timer-display {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: 1.7rem;
+      line-height: 1;
+      color: #ffffff;
+      margin: 2px 0;
+    }
+
+    .timer-display.timer-warning {
+      color: #ef4444;
+      animation: timerPulse 0.5s infinite alternate;
+    }
+
+    @keyframes timerPulse {
+      from { transform: scale(1); text-shadow: 0 0 6px #ef4444; }
+      to { transform: scale(1.16); text-shadow: 0 0 16px #ef4444; }
+    }
+
+    .hud-mini-btns {
+      display: flex;
+      gap: 5px;
+    }
+
+    .hud-icon-btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #f8fafc;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    /* Canvas e Banner Central */
+    .canvas-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: #050811;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #round-banner {
+      position: absolute;
+      top: 42%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: clamp(2rem, 5.5vw, 4.2rem);
+      color: #ffdf00;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 5px 0 #002776, 0 0 25px rgba(0, 0, 0, 0.95);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 15;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    #round-banner.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Controles Touch */
+    #touch-controls {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    body.pc-mode #touch-controls {
+      display: none;
+    }
+
+    body.pc-mode #touch-controls.force-visible {
+      display: flex;
+    }
+
+    body.mobile-mode #touch-controls {
+      display: flex;
+    }
+
+    .touch-cluster {
+      display: grid;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(2, 56px);
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    .touch-cluster.actions-mobile {
+      grid-template-columns: repeat(2, 66px);
+      grid-template-rows: repeat(2, 58px);
+      gap: 8px;
+    }
+
+    .touch-btn {
+      background: rgba(15, 23, 42, 0.78);
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      border-radius: 16px;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 0.82rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      touch-action: none;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.65);
+      transition: transform 0.06s ease, background 0.06s ease;
+    }
+
+    .touch-btn small {
+      font-size: 0.62rem;
+      opacity: 0.85;
+    }
+
+    .touch-btn:active, .touch-btn.pressed {
+      background: rgba(0, 240, 255, 0.5);
+      border-color: #00f0ff;
+      transform: scale(0.92);
+    }
+
+    .touch-btn.punch {
+      border-color: #38bdf8;
+      background: rgba(3, 105, 161, 0.68);
+    }
+
+    .touch-btn.kick {
+      border-color: #4ade80;
+      background: rgba(21, 128, 61, 0.68);
+    }
+
+    .touch-btn.special {
+      border-color: #ffdf00;
+      color: #ffdf00;
+      background: rgba(161, 98, 7, 0.68);
+    }
+
+    .touch-btn.special.super-ready {
+      background: linear-gradient(180deg, rgba(250, 204, 21, 0.9), rgba(234, 88, 12, 0.9));
+      color: #090d16;
+      border-color: #ffffff;
+      box-shadow: 0 0 18px rgba(255, 223, 0, 0.95);
+    }
+
+    .touch-btn.shield {
+      border-color: #00f0ff;
+      color: #00f0ff;
+      background: rgba(14, 116, 144, 0.65);
+    }
+
+    /* ========================================================================
+       ESTAÇÃO DUPLA ERGONÔMICA PARA 2 JOGADORES NO CELULAR (.dual-p2)
+       Separa J1 na esquerda e J2 na direita com botões grandes e sem colisão.
+       ======================================================================== */
+    .dual-p2-station {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: rgba(9, 13, 22, 0.62);
+      backdrop-filter: blur(4px);
+      border: 2px solid rgba(0, 240, 255, 0.55);
+      border-radius: 16px;
+      padding: 6px 8px 8px;
+      pointer-events: auto;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
+    }
+
+    .dual-p2-station.p2 {
+      border-color: rgba(250, 204, 21, 0.6);
+    }
+
+    .dual-station-label {
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      text-align: center;
+      color: #00f0ff;
+      text-transform: uppercase;
+    }
+
+    .dual-p2-station.p2 .dual-station-label {
+      color: #ffdf00;
+    }
+
+    .dual-pad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 46px);
+      grid-template-rows: repeat(2, 44px);
+      gap: 5px;
+    }
+
+    .dual-pad-grid .touch-btn {
+      border-radius: 12px;
+      font-size: 0.78rem;
+    }
+
+    .dual-pad-grid .touch-btn.span-2 {
+      grid-column: span 2;
+      font-size: 0.82rem;
+    }
+
+    /* Alterna entre o layout 1P e o layout duplo 2P no celular */
+    #touch-controls.dual-p2 #touch-single-left,
+    #touch-controls.dual-p2 #touch-single-right {
+      display: none;
+    }
+
+    #touch-controls.dual-p2 .dual-p2-station {
+      display: flex;
+    }
+
+    #btn-tabletop-toggle {
+      display: none;
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.88);
+      border: 2px solid #94a3b8;
+      border-radius: 999px;
+      color: #f8fafc;
+      font-size: 0.68rem;
+      font-weight: 900;
+      padding: 6px 11px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+      align-self: flex-end;
+    }
+
+    #touch-controls.dual-p2 #btn-tabletop-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Modo Mesa (Frente a Frente): gira o controle do J2 em 180° no topo direito */
+    #touch-controls.dual-p2.tabletop-mode #touch-dual-p2 {
+      position: fixed;
+      top: 56px;
+      right: 10px;
+      transform: rotate(180deg);
+      z-index: 25;
+    }
+
+    @media (max-width: 680px) {
+      .dual-pad-grid {
+        grid-template-columns: repeat(4, 41px);
+        grid-template-rows: repeat(2, 40px);
+        gap: 4px;
+      }
+    }
+
+    /* ==========================================================================
+       6.5 ADAPTAÇÕES COMPLETAS DA VERSÃO CELULAR (body.mobile-mode)
+       Reorganiza menus, seleção de personagens, torre e HUD para telas móveis.
+       ========================================================================== */
+    body.mobile-mode #start-screen {
+      padding: 8px 12px;
+      justify-content: space-around;
+    }
+
+    body.mobile-mode .game-title {
+      font-size: clamp(1.65rem, 4.5vw, 2.5rem);
+    }
+
+    body.mobile-mode .game-subtitle {
+      font-size: 0.76rem;
+      margin-top: 2px;
+    }
+
+    body.mobile-mode .menu-buttons {
+      margin: 6px 0;
+      gap: 8px;
+    }
+
+    body.mobile-mode .menu-buttons .btn-arcade {
+      padding: 8px 13px;
+      font-size: 0.82rem;
+    }
+
+    body.mobile-mode .controls-showcase {
+      padding: 8px 10px;
+      gap: 8px;
+    }
+
+    body.mobile-mode #select-screen {
+      padding: 6px 10px 14px;
+      gap: 6px;
+    }
+
+    body.mobile-mode .select-header h2 {
+      font-size: 1rem;
+    }
+
+    body.mobile-mode .select-main-area {
+      grid-template-columns: 148px 1fr 148px;
+      gap: 8px;
+    }
+
+    body.mobile-mode .fighter-preview-panel {
+      padding: 6px;
+      gap: 3px;
+    }
+
+    body.mobile-mode .preview-canvas-wrap {
+      width: 84px;
+      height: 78px;
+    }
+
+    body.mobile-mode .preview-canvas {
+      width: 84px;
+      height: 78px;
+    }
+
+    body.mobile-mode .pixel-portrait-badge {
+      width: 24px;
+      height: 24px;
+    }
+
+    body.mobile-mode .preview-name {
+      font-size: 0.8rem;
+    }
+
+    body.mobile-mode .preview-title {
+      font-size: 0.64rem;
+    }
+
+    body.mobile-mode .roster-container {
+      padding: 6px;
+      gap: 5px;
+    }
+
+    body.mobile-mode .roster-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    body.mobile-mode .fighter-card {
+      padding: 5px 3px 4px;
+      gap: 3px;
+    }
+
+    body.mobile-mode .fighter-card canvas {
+      width: 34px;
+      height: 34px;
+    }
+
+    body.mobile-mode .fighter-card-name {
+      font-size: 0.64rem;
+    }
+
+    body.mobile-mode .match-settings-bar {
+      grid-template-columns: 1fr 1.35fr;
+      gap: 6px;
+    }
+
+    body.mobile-mode .setting-box {
+      padding: 5px 7px;
+      gap: 4px;
+    }
+
+    body.mobile-mode .option-chip {
+      padding: 4px 2px;
+    }
+
+    body.mobile-mode .option-chip strong {
+      font-size: 0.7rem;
+    }
+
+    body.mobile-mode .arena-thumb {
+      height: 14px;
+    }
+
+    body.mobile-mode .select-actions .btn-arcade {
+      padding: 7px 16px;
+      font-size: 0.85rem;
+    }
+
+    /* Torre compacta no Celular */
+    body.mobile-mode #screen-tower {
+      padding: 6px 10px;
+      gap: 6px;
+    }
+
+    body.mobile-mode .tower-header h2 {
+      font-size: 1.2rem;
+    }
+
+    body.mobile-mode .tower-layout {
+      grid-template-columns: 1.1fr 1fr;
+      gap: 8px;
+    }
+
+    body.mobile-mode .tower-ladder-box,
+    body.mobile-mode .tower-detail-box {
+      padding: 8px;
+      gap: 4px;
+    }
+
+    body.mobile-mode .tower-step-card {
+      padding: 4px 8px;
+    }
+
+    body.mobile-mode .step-portrait {
+      width: 32px;
+      height: 32px;
+    }
+
+    /* HUD compacta na Batalha Mobile para dar espaço total aos lutadores e botões */
+    body.mobile-mode #battle-hud {
+      padding: 3px 8px;
+      gap: 6px;
+    }
+
+    body.mobile-mode .hud-portrait {
+      width: 38px;
+      height: 38px;
+    }
+
+    body.mobile-mode .hud-name-row {
+      font-size: 0.68rem;
+    }
+
+    body.mobile-mode .hp-bar-outer {
+      height: 13px;
+    }
+
+    body.mobile-mode .hp-numeric-text {
+      font-size: 0.58rem;
+    }
+
+    body.mobile-mode .hud-center-box {
+      padding: 2px 8px;
+      min-width: 70px;
+    }
+
+    body.mobile-mode .timer-display {
+      font-size: 1.25rem;
+    }
+
+    /* ==========================================================================
+       7. MODAL DE FIM DE LUTA / VITÓRIA DA TORRE / DERROTA
+       ========================================================================== */
+    #gameover-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 17, 0.88);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    #gameover-modal.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 3px solid var(--brasil-amarelo);
+      border-radius: 20px;
+      padding: 22px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 223, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .modal-champion-title {
+      font-size: 0.88rem;
+      font-weight: 900;
+      color: #4ade80;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .modal-winner-name {
+      font-family: Impact, 'Arial Black', sans-serif;
+      font-size: clamp(1.7rem, 4vw, 2.25rem);
+      color: #ffdf00;
+      text-shadow: 0 3px 0 #002776;
+    }
+
+    .modal-portrait {
+      width: 84px;
+      height: 84px;
+      border: 3px solid #ffffff;
+      border-radius: 14px;
+      image-rendering: pixelated;
+      background: #090d16;
+    }
+
+    .modal-summary {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+    }
+
+    .modal-ending-box {
+      display: none;
+      background: rgba(88, 28, 135, 0.35);
+      border: 2px solid #c084fc;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: #f3e8ff;
+      text-align: left;
+    }
+
+    .modal-ending-box.visible {
+      display: block;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .modal-buttons .btn-arcade {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.92rem;
+    }
+
+    /* ==========================================================================
+       8. CAMADA DE FOGOS DE ARTIFÍCIO (CELEBRAÇÃO FINAL)
+       ========================================================================== */
+    #fireworks-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 90;
+    }
+  </style>
+</head>
+<body class="pc-mode">
+
+  <!-- Canvas dedicado ao espetáculo de Fogos de Artifício -->
+  <canvas id="fireworks-canvas"></canvas>
+
+  <!-- ========================================================================
+       AVISO DE ROTAÇÃO DE TELA (EXCLUSIVO PARA CELULAR EM MODO RETRATO)
+       ======================================================================== -->
+  <div id="rotate-overlay">
+    <div class="rotate-phone-icon">📱</div>
+    <h2 style="font-family:Impact,sans-serif;font-size:1.7rem;color:#ffdf00;letter-spacing:1px">GIRE O CELULAR PARA JOGAR!</h2>
+    <p style="font-size:0.92rem;color:#cbd5e1;max-width:340px;line-height:1.4">
+      Para visualizar toda a arena e usar os botões arcade com as duas mãos, deixe o aparelho na horizontal (deitado).
+    </p>
+    <button class="btn-arcade btn-secundario" onclick="dismissRotateOverlay()">CONTINUAR ASSIM MESMO</button>
+  </div>
+
+  <!-- ========================================================================
+       TELA 0: SELEÇÃO DE PLATAFORMA (COMPUTADOR vs CELULAR)
+       ======================================================================== -->
+  <section id="platform-screen" class="screen active">
+    <div>
+      <div class="badge-arcade">🇧🇷 MEME KOMBAT BRASIL 🇧🇷</div>
+      <h1 class="game-title" style="font-size:clamp(2rem,5vw,3.5rem)">COMO VOCÊ VAI JOGAR?</h1>
+      <p class="game-subtitle" style="font-size:0.95rem">ESCOLHA A VERSÃO OTIMIZADA PARA O SEU APARELHO</p>
+    </div>
+
+    <div class="platform-grid">
+      <!-- Opção 1: Computador (PC) -->
+      <div class="platform-card pc" onclick="selectPlatform('pc')">
+        <div class="platform-icon">💻</div>
+        <h2>COMPUTADOR (PC)</h2>
+        <ul class="platform-features">
+          <li>⌨️ <strong>Teclado Completo:</strong> WASD + QER (J1) e Setas + JKL (J2)</li>
+          <li>🖥️ <strong>Arena Limpa:</strong> Sem botões ocupando a tela</li>
+          <li>👥 <strong>Modos:</strong> 1 Jogador, Modo Torre e 2 Jogadores Local</li>
+        </ul>
+        <button class="btn-arcade btn-azul" style="width:100%">JOGAR NO PC</button>
+      </div>
+
+      <!-- Opção 2: Celular (Mobile) -->
+      <div class="platform-card mobile" onclick="selectPlatform('mobile')">
+        <div class="platform-icon">📱</div>
+        <h2>CELULAR (TOUCH)</h2>
+        <ul class="platform-features">
+          <li>🕹️ <strong>Controles Multitoque:</strong> Ande e ataque ao mesmo tempo</li>
+          <li>📐 <strong>Interface Adaptada:</strong> Menus e HUD compactos</li>
+          <li>🛡️ <strong>Botões Arcade:</strong> Direcional + Soco, Chute, Escudo e Super</li>
+        </ul>
+        <button class="btn-arcade" style="width:100%">JOGAR NO CELULAR</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TELA 1: MENU PRINCIPAL (START SCREEN)
+       ======================================================================== -->
+  <section id="start-screen" class="screen">
+    <div class="logo-container">
+      <div id="platform-badge-indicator" class="badge-arcade">💻 MODO COMPUTADOR ATIVO • 🇧🇷 FLIPERAMA</div>
+      <h1 class="game-title">MEME KOMBAT<br>BRASIL</h1>
+      <p class="game-subtitle">A BATALHA SUPREMA DA INTERNET BRASILEIRA</p>
+    </div>
+
+    <div class="menu-buttons">
+      <button class="btn-arcade btn-verde" onclick="goToSelect('1P')">🕹️ 1 JOGADOR</button>
+      <button class="btn-arcade btn-roxo" onclick="goToSelect('TOWER')">🏰 MODO TORRE</button>
+      <button class="btn-arcade btn-azul" onclick="goToSelect('2P')">👥 2 JOGADORES</button>
+      <button id="btn-audio-toggle" class="btn-arcade btn-secundario" onclick="toggleAudio()">🔊 SOM: LIGADO</button>
+      <button class="btn-arcade btn-secundario" onclick="launchFireworksShow(3600)">🎆 FOGOS!</button>
+      <button class="btn-arcade btn-secundario" onclick="showScreen('platform-screen')">🔄 PC / CELULAR</button>
+    </div>
+
+    <!-- Guia de Controles para PC -->
+    <div id="start-controls-pc" class="controls-showcase">
+      <div class="control-card">
+        <h3><span>🔵 JOGADOR 1 (TECLADO)</span><span>WASD + QER</span></h3>
+        <div class="key-grid">
+          <div class="key-item"><kbd>W</kbd><kbd>A</kbd><kbd>D</kbd> Mover e Pular</div>
+          <div class="key-item"><kbd>S</kbd> Escudo / Parry</div>
+          <div class="key-item"><kbd>Q</kbd> Soco Rápido</div>
+          <div class="key-item"><kbd>E</kbd> Chute Forte</div>
+          <div class="key-item"><kbd>R</kbd> Golpe Especial</div>
+          <div class="key-item">🛡️ Solte <kbd>S</kbd> p/ regenerar</div>
+        </div>
+      </div>
+
+      <div class="control-card p2">
+        <h3><span>🟡 JOGADOR 2 (TECLADO)</span><span>SETAS + JKL</span></h3>
+        <div class="key-grid">
+          <div class="key-item"><kbd>↑</kbd><kbd>←</kbd><kbd>→</kbd> Mover e Pular</div>
+          <div class="key-item"><kbd>↓</kbd> Escudo / Parry</div>
+          <div class="key-item"><kbd>J</kbd> Soco Rápido</div>
+          <div class="key-item"><kbd>K</kbd> Chute Forte</div>
+          <div class="key-item"><kbd>L</kbd> Golpe Especial</div>
+          <div class="key-item">⚡ Parry nos 0.2s iniciais!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guia de Controles para Celular (Touch) -->
+    <div id="start-controls-mobile" class="controls-showcase" style="display:none">
+      <div class="control-card">
+        <h3><span>👈 MÃO ESQUERDA (MOVIMENTO)</span><span>MULTITOQUE</span></h3>
+        <div class="key-grid">
+          <div class="key-item"><kbd>←</kbd><kbd>→</kbd> Andar na arena</div>
+          <div class="key-item"><kbd>↑</kbd> Pular golpes</div>
+          <div class="key-item"><kbd>🛡️</kbd> Escudo / Parry</div>
+          <div class="key-item">👆 Deslize o dedo no direcional</div>
+        </div>
+      </div>
+
+      <div class="control-card p2">
+        <h3><span>👉 MÃO DIREITA (GOLPES)</span><span>ARCADE TOUCH</span></h3>
+        <div class="key-grid">
+          <div class="key-item"><kbd>SOCO</kbd> Golpe rápido</div>
+          <div class="key-item"><kbd>CHUTE</kbd> Golpe forte</div>
+          <div class="key-item"><kbd>DEF</kbd> Bloqueio rápido</div>
+          <div class="key-item"><kbd>SUPER</kbd> Especial (100%)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TELA 2: SELEÇÃO DE LUTADORES, HISTÓRIA, DIFICULDADE, MAPAS E TEMPO
+       ======================================================================== -->
+  <section id="select-screen" class="screen">
+    <div class="select-header">
+      <h2 id="select-mode-title">ESCOLHA SEUS LUTADORES, ARENA E DIFICULDADE</h2>
+    </div>
+
+    <div class="select-main-area">
+      <!-- Painel Jogador 1 -->
+      <div class="fighter-preview-panel p1">
+        <span class="preview-tag">JOGADOR 1</span>
+        <div class="preview-canvas-wrap">
+          <canvas id="p1-preview-canvas" class="preview-canvas" width="125" height="135"></canvas>
+          <canvas id="p1-pixel-badge" class="pixel-portrait-badge" width="34" height="34"></canvas>
+        </div>
+        <div>
+          <div id="p1-preview-name" class="preview-name">Ednaldo Pereira</div>
+          <div id="p1-preview-title" class="preview-title">O Mestre Supremo</div>
+        </div>
+        <div class="stat-bars">
+          <div class="stat-row"><span>VEL</span><div class="stat-track"><div id="p1-stat-vel" class="stat-fill" style="width:70%"></div></div></div>
+          <div class="stat-row"><span>FOR</span><div class="stat-track"><div id="p1-stat-for" class="stat-fill" style="width:95%"></div></div></div>
+          <div class="stat-row"><span>DEF</span><div class="stat-track"><div id="p1-stat-def" class="stat-fill" style="width:90%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Grade 4x2 com os 8 Lutadores -->
+      <div class="roster-container">
+        <div id="roster-grid" class="roster-grid"></div>
+        <div class="roster-tools">
+          <span id="select-turn-hint" class="select-turn-hint">Clique para escolher J1</span>
+          <button class="btn-arcade btn-secundario" onclick="randomizeFighters()">🎲 ALEATÓRIO</button>
+        </div>
+      </div>
+
+      <!-- Painel Direito: Prévia do J2/CPU (nos modos 1P/2P) OU História do Lutador (no Modo Torre) -->
+      <div id="p2-panel-normal" class="fighter-preview-panel p2">
+        <span id="p2-preview-tag" class="preview-tag">CPU (J2)</span>
+        <div class="preview-canvas-wrap">
+          <canvas id="p2-preview-canvas" class="preview-canvas" width="125" height="135"></canvas>
+          <canvas id="p2-pixel-badge" class="pixel-portrait-badge" width="34" height="34"></canvas>
+        </div>
+        <div>
+          <div id="p2-preview-name" class="preview-name">Caneta Azul</div>
+          <div id="p2-preview-title" class="preview-title">Manoel Gomes</div>
+        </div>
+        <div class="stat-bars">
+          <div class="stat-row"><span>VEL</span><div class="stat-track"><div id="p2-stat-vel" class="stat-fill" style="width:80%"></div></div></div>
+          <div class="stat-row"><span>FOR</span><div class="stat-track"><div id="p2-stat-for" class="stat-fill" style="width:78%"></div></div></div>
+          <div class="stat-row"><span>DEF</span><div class="stat-track"><div id="p2-stat-def" class="stat-fill" style="width:82%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Painel Narrativo do Modo Torre (visível apenas quando gameMode === 'TOWER') -->
+      <div id="p2-panel-tower" class="fighter-preview-panel tower-info" style="display:none">
+        <span class="preview-tag">🏰 JORNADA DA TORRE</span>
+        <div class="story-lore-box">
+          <strong id="tower-lore-fighter-title">História de Ednaldo Pereira:</strong>
+          <p id="tower-lore-text">Sentindo uma perturbação na força dos memes brasileiros, Ednaldo Pereira desce de seu trono celestial para testar os guerreiros da Torre.</p>
+        </div>
+        <div style="font-size:0.72rem;color:#cbd5e1;text-align:center">
+          ⚔️ 5 Degraus • Melhor de 3 Rounds<br>👑 Chefão Final com 115 HP!
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra Inferior: Dificuldade + Tempo (Esquerda) e Grade 3x3 de Mapas Brasileiros (Direita) -->
+    <div class="match-settings-bar">
+      <div class="settings-left-col">
+        <!-- 1. Seletor de Dificuldade da CPU (4 Níveis) -->
+        <div id="cpu-diff-box" class="setting-box">
+          <div class="setting-box-title">
+            <span>🤖 DIFICULDADE DA CPU</span>
+            <span id="diff-desc-label" style="color:#ffdf00;font-size:0.68rem">Equilibrado</span>
+          </div>
+          <div class="diff-options" data-diff-group>
+            <div class="option-chip diff-facil" data-diff="facil" onclick="selectCpuDifficulty('facil')">
+              <strong>Fácil</strong>
+              <small>Iniciante</small>
+            </div>
+            <div class="option-chip diff-normal active" data-diff="normal" onclick="selectCpuDifficulty('normal')">
+              <strong>Normal</strong>
+              <small>Raiz</small>
+            </div>
+            <div class="option-chip diff-dificil" data-diff="dificil" onclick="selectCpuDifficulty('dificil')">
+              <strong>Difícil</strong>
+              <small>Apelão</small>
+            </div>
+            <div class="option-chip diff-lendario" data-diff="lendario" onclick="selectCpuDifficulty('lendario')">
+              <strong>Lendário</strong>
+              <small>ADM</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Seletor de Tempo do Round -->
+        <div class="setting-box">
+          <div class="setting-box-title">⏱️ TEMPO DO ROUND</div>
+          <div id="time-options" class="time-options">
+            <div class="option-chip" data-time="30" onclick="selectRoundTime(30)">
+              <strong>30s</strong>
+              <small>Rápido</small>
+            </div>
+            <div class="option-chip active" data-time="60" onclick="selectRoundTime(60)">
+              <strong>60s</strong>
+              <small>Padrão</small>
+            </div>
+            <div class="option-chip" data-time="90" onclick="selectRoundTime(90)">
+              <strong>90s</strong>
+              <small>Longo</small>
+            </div>
+            <div class="option-chip" data-time="null" onclick="selectRoundTime(null)">
+              <strong>∞</strong>
+              <small>Infinito</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Seletor dos 8 Mapas Brasileiros + Aleatório com Prévia Visual -->
+      <div id="arena-select-box" class="setting-box">
+        <div class="setting-box-title">
+          <span>🗺️ MAPA DE BATALHA (8 ARENAS + ALEATÓRIO)</span>
+          <span id="arena-tower-note" style="color:#c084fc;font-size:0.66rem;display:none">Rota da Torre</span>
+        </div>
+        <div id="arena-options" class="arena-options">
+          <div class="option-chip active" data-arena="copacabana" onclick="selectArena('copacabana')">
+            <canvas id="thumb-copacabana" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Copacabana</strong>
+          </div>
+          <div class="option-chip" data-arena="varzea" onclick="selectArena('varzea')">
+            <canvas id="thumb-varzea" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Quadra de Várzea</strong>
+          </div>
+          <div class="option-chip" data-arena="feira" onclick="selectArena('feira')">
+            <canvas id="thumb-feira" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Feira & Pastel</strong>
+          </div>
+          <div class="option-chip" data-arena="laje" onclick="selectArena('laje')">
+            <canvas id="thumb-laje" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Laje & Churrasco</strong>
+          </div>
+          <div class="option-chip" data-arena="amazonia" onclick="selectArena('amazonia')">
+            <canvas id="thumb-amazonia" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Amazônia</strong>
+          </div>
+          <div class="option-chip" data-arena="sertao" onclick="selectArena('sertao')">
+            <canvas id="thumb-sertao" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Sertão Junino</strong>
+          </div>
+          <div class="option-chip" data-arena="paulista" onclick="selectArena('paulista')">
+            <canvas id="thumb-paulista" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Av. Paulista</strong>
+          </div>
+          <div class="option-chip" data-arena="maracana" onclick="selectArena('maracana')">
+            <canvas id="thumb-maracana" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>Estádio Final</strong>
+          </div>
+          <div class="option-chip" data-arena="aleatorio" onclick="selectArena('aleatorio')">
+            <canvas id="thumb-aleatorio" class="arena-thumb" width="90" height="22"></canvas>
+            <strong>🎲 Aleatório</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="select-actions">
+      <button class="btn-arcade btn-secundario" onclick="showScreen('start-screen')">⬅️ VOLTAR</button>
+      <button id="btn-confirm-select" class="btn-arcade btn-verde" onclick="confirmSelection()">🔥 LUTAR! 🔥</button>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TELA 3: ESCADA DO MODO TORRE (5 DEGRAUS)
+       ======================================================================== -->
+  <section id="screen-tower" class="screen">
+    <div class="tower-header">
+      <h2>🏰 TORRE SUPREMA DOS MEMES 🏰</h2>
+      <p id="tower-progress-subtitle" style="font-size:0.86rem;color:#cbd5e1">Vença os 5 degraus para conquistar o trono da internet brasileira!</p>
+    </div>
+
+    <div class="tower-layout">
+      <!-- Escada Visual de 5 Degraus (Renderizada de cima para baixo: Degrau 5 Chefão no topo -> Degrau 1 na base) -->
+      <div id="tower-ladder-list" class="tower-ladder-box"></div>
+
+      <!-- Detalhes do Confronto Atual, Provocação e Seletor de Dificuldade -->
+      <div class="tower-detail-box">
+        <div class="tower-vs-banner">
+          <div class="tower-fighter-mini">
+            <canvas id="tower-player-portrait" width="64" height="64"></canvas>
+            <strong id="tower-player-name" style="font-size:0.85rem;color:#00f0ff">Ednaldo</strong>
+            <small style="font-size:0.68rem;color:#94a3b8">DESAFIANTE</small>
+          </div>
+
+          <div class="tower-vs-text">VS</div>
+
+          <div class="tower-fighter-mini enemy">
+            <canvas id="tower-enemy-portrait" width="64" height="64"></canvas>
+            <strong id="tower-enemy-name" style="font-size:0.85rem;color:#ffdf00">Caneta Azul</strong>
+            <small id="tower-enemy-badge" style="font-size:0.68rem;color:#f87171">DEGRAU 1/5</small>
+          </div>
+        </div>
+
+        <div class="taunt-bubble">
+          <small id="tower-taunt-speaker">💬 PROVOCAÇÃO PRÉ-LUTA:</small>
+          <p id="tower-taunt-text">"Caneta azul, azul caneta... hoje eu vou assinar a sua derrota!"</p>
+        </div>
+
+        <!-- Seletor de Dificuldade da CPU também acessível na Torre -->
+        <div class="setting-box">
+          <div class="setting-box-title">
+            <span>🤖 DIFICULDADE DA CPU</span>
+            <span id="tower-diff-desc" style="color:#ffdf00;font-size:0.68rem">Equilibrado</span>
+          </div>
+          <div class="diff-options" data-diff-group>
+            <div class="option-chip diff-facil" data-diff="facil" onclick="selectCpuDifficulty('facil')">
+              <strong>Fácil</strong>
+              <small>Iniciante</small>
+            </div>
+            <div class="option-chip diff-normal active" data-diff="normal" onclick="selectCpuDifficulty('normal')">
+              <strong>Normal</strong>
+              <small>Raiz</small>
+            </div>
+            <div class="option-chip diff-dificil" data-diff="dificil" onclick="selectCpuDifficulty('dificil')">
+              <strong>Difícil</strong>
+              <small>Apelão</small>
+            </div>
+            <div class="option-chip diff-lendario" data-diff="lendario" onclick="selectCpuDifficulty('lendario')">
+              <strong>Lendário</strong>
+              <small>ADM</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="tower-actions">
+          <button class="btn-arcade btn-vermelho" onclick="abandonTower()">🏳️ ABANDONAR TORRE</button>
+          <button class="btn-arcade btn-verde" onclick="startTowerBattle()">⚔️ INICIAR LUTA</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       TELA 4: ARENA DE LUTA (HUD + CANVAS + CONTROLES TOUCH)
+       ======================================================================== -->
+  <section id="battle-screen" class="screen">
+    <div id="battle-hud">
+      <!-- HUD Jogador 1 -->
+      <div class="player-hud p1">
+        <canvas id="hud-p1-portrait" class="hud-portrait" width="48" height="48"></canvas>
+        <div class="hud-bars-col">
+          <div class="hud-name-row">
+            <span id="hud-p1-name">EDNALDO PEREIRA</span>
+            <div class="round-dots">
+              <span id="p1-dot-1" class="round-dot"></span>
+              <span id="p1-dot-2" class="round-dot"></span>
+            </div>
+          </div>
+          <div id="p1-hp-outer" class="hp-bar-outer">
+            <div id="p1-hp-ghost" class="hp-ghost-fill"></div>
+            <div id="p1-hp-fill" class="hp-bar-fill"></div>
+            <div id="p1-hp-text" class="hp-numeric-text">100 / 100</div>
+          </div>
+          <div class="sub-bars-row">
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>SUPER</span><span id="p1-super-text">0%</span></div>
+              <div class="mini-bar-track"><div id="p1-super-fill" class="super-fill"></div></div>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span id="p1-stam-label">FÔLEGO</span><span id="p1-stam-text">100%</span></div>
+              <div class="mini-bar-track"><div id="p1-stam-fill" class="stamina-fill"></div></div>
+            </div>
+          </div>
+          <div class="shield-hud-row">
+            <div class="shield-pips">
+              <div id="p1-shield-1" class="shield-pip hp-3"></div>
+              <div id="p1-shield-2" class="shield-pip hp-3"></div>
+              <div id="p1-shield-3" class="shield-pip hp-3"></div>
+            </div>
+            <div class="shield-regen-track">
+              <div id="p1-shield-regen-fill" class="shield-regen-fill"></div>
+            </div>
+            <span id="p1-shield-status" class="shield-status-text">ESCUDO 3/3</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Relógio Central e Indicador de Round / Torre -->
+      <div class="hud-center-box">
+        <span id="hud-round-label" class="round-label">ROUND 1</span>
+        <div id="hud-timer" class="timer-display">60</div>
+        <div class="hud-mini-btns">
+          <button class="hud-icon-btn" title="Alternar Som" onclick="toggleAudio()">🔊</button>
+          <button class="hud-icon-btn" title="Controles Touch" onclick="toggleTouchControls()">🎮</button>
+          <button class="hud-icon-btn" title="Voltar ao Menu" onclick="exitToMenu()">🏠</button>
+        </div>
+      </div>
+
+      <!-- HUD Jogador 2 / CPU / Chefão -->
+      <div class="player-hud p2">
+        <canvas id="hud-p2-portrait" class="hud-portrait" width="48" height="48"></canvas>
+        <div class="hud-bars-col">
+          <div class="hud-name-row">
+            <div class="hud-name-badges">
+              <span id="hud-p2-name">CANETA AZUL</span>
+              <span id="hud-cpu-badge" class="hud-cpu-badge">CPU: NORMAL</span>
+              <span id="hud-boss-badge" class="hud-boss-badge" style="display:none">👑 CHEFÃO</span>
+            </div>
+            <div class="round-dots">
+              <span id="p2-dot-1" class="round-dot"></span>
+              <span id="p2-dot-2" class="round-dot"></span>
+            </div>
+          </div>
+          <div id="p2-hp-outer" class="hp-bar-outer">
+            <div id="p2-hp-ghost" class="hp-ghost-fill"></div>
+            <div id="p2-hp-fill" class="hp-bar-fill"></div>
+            <div id="p2-hp-text" class="hp-numeric-text">100 / 100</div>
+          </div>
+          <div class="sub-bars-row">
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span>SUPER</span><span id="p2-super-text">0%</span></div>
+              <div class="mini-bar-track"><div id="p2-super-fill" class="super-fill"></div></div>
+            </div>
+            <div class="mini-bar-wrap">
+              <div class="mini-bar-label"><span id="p2-stam-label">FÔLEGO</span><span id="p2-stam-text">100%</span></div>
+              <div class="mini-bar-track"><div id="p2-stam-fill" class="stamina-fill"></div></div>
+            </div>
+          </div>
+          <div class="shield-hud-row">
+            <div class="shield-pips">
+              <div id="p2-shield-1" class="shield-pip hp-3"></div>
+              <div id="p2-shield-2" class="shield-pip hp-3"></div>
+              <div id="p2-shield-3" class="shield-pip hp-3"></div>
+            </div>
+            <div class="shield-regen-track">
+              <div id="p2-shield-regen-fill" class="shield-regen-fill"></div>
+            </div>
+            <span id="p2-shield-status" class="shield-status-text">ESCUDO 3/3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas Principal da Arena -->
+    <div class="canvas-wrapper">
+      <canvas id="game-canvas" width="1280" height="620"></canvas>
+      <div id="round-banner">ROUND 1</div>
+
+      <!-- Controles Touch Responsivos para Celular (Multitoque + Slide no Direcional) -->
+      <div id="touch-controls">
+        <!-- Direcional Esquerdo (Modo 1 Jogador / Torre) -->
+        <div id="touch-single-left" class="touch-cluster">
+          <div></div>
+          <button class="touch-btn" data-key="KeyW">↑<small>PULO</small></button>
+          <div></div>
+          <button class="touch-btn" data-key="KeyA">←</button>
+          <button class="touch-btn shield" data-key="KeyS">🛡️<small>DEF</small></button>
+          <button class="touch-btn" data-key="KeyD">→</button>
+        </div>
+
+        <!-- Botões de Golpe Direito (Modo 1 Jogador / Torre) -->
+        <div id="touch-single-right" class="touch-cluster actions-mobile">
+          <button class="touch-btn punch" data-key="KeyQ">🥊<small>SOCO</small></button>
+          <button class="touch-btn kick" data-key="KeyE">🦵<small>CHUTE</small></button>
+          <button class="touch-btn shield" data-key="KeyS">🛡️<small>ESCUDO</small></button>
+          <button id="touch-btn-special" class="touch-btn special" data-key="KeyR">⚡<small>SUPER</small></button>
+        </div>
+
+        <!-- ESTAÇÃO COMPLETA JOGADOR 1 (Modo 2 Jogadores no Celular - Esquerda) -->
+        <div id="touch-dual-p1" class="dual-p2-station p1">
+          <div class="dual-station-label">🔵 JOGADOR 1</div>
+          <div class="dual-pad-grid">
+            <button class="touch-btn" data-key="KeyA">←</button>
+            <button class="touch-btn" data-key="KeyW">↑<small>PULO</small></button>
+            <button class="touch-btn" data-key="KeyD">→</button>
+            <button class="touch-btn shield" data-key="KeyS">🛡️<small>DEF</small></button>
+            <button class="touch-btn punch" data-key="KeyQ">🥊<small>SOCO</small></button>
+            <button class="touch-btn kick" data-key="KeyE">🦵<small>CHUTE</small></button>
+            <button id="touch-btn-special-p1" class="touch-btn special span-2" data-key="KeyR">⚡ SUPER</button>
+          </div>
+        </div>
+
+        <!-- Botão para alternar Lado a Lado vs Modo Mesa (Frente a Frente) -->
+        <button id="btn-tabletop-toggle" type="button" onclick="toggleTabletopMode()">🔄 MODO MESA</button>
+
+        <!-- ESTAÇÃO COMPLETA JOGADOR 2 (Modo 2 Jogadores no Celular - Direita) -->
+        <div id="touch-dual-p2" class="dual-p2-station p2">
+          <div class="dual-station-label">🟡 JOGADOR 2</div>
+          <div class="dual-pad-grid">
+            <button class="touch-btn shield" data-key="ArrowDown">🛡️<small>DEF</small></button>
+            <button class="touch-btn" data-key="ArrowLeft">←</button>
+            <button class="touch-btn" data-key="ArrowUp">↑<small>PULO</small></button>
+            <button class="touch-btn" data-key="ArrowRight">→</button>
+            <button id="touch-btn-special-p2" class="touch-btn special span-2" data-key="KeyL">⚡ SUPER</button>
+            <button class="touch-btn punch" data-key="KeyJ">🥊<small>SOCO</small></button>
+            <button class="touch-btn kick" data-key="KeyK">🦵<small>CHUTE</small></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       MODAL DE FIM DE PARTIDA (1P / 2P / ETAPA DA TORRE / CAMPEÃO DA TORRE)
+       ======================================================================== -->
+  <div id="gameover-modal">
+    <div class="modal-card">
+      <div id="modal-subtitle-top" class="modal-champion-title">🏆 FIM DA PARTIDA 🏆</div>
+      <div id="modal-winner-name" class="modal-winner-name">EDNALDO PEREIRA VENCEU!</div>
+      <canvas id="modal-winner-portrait" class="modal-portrait" width="64" height="64"></canvas>
+      <div id="modal-summary" class="modal-summary">Placar Final: 2 x 0</div>
+      <div id="modal-ending-box" class="modal-ending-box"></div>
+      <div id="modal-buttons" class="modal-buttons"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       JAVASCRIPT PURO DO JOGO (COMENTÁRIOS DIDÁTICOS EM PORTUGUÊS)
+       ======================================================================== -->
+  <script>
+    /* ========================================================================
+       1. SISTEMA DE ÁUDIO SINTETIZADO (WEB AUDIO API)
+       Geramos todos os efeitos sonoros em tempo real sem precisar baixar MP3.
+       ======================================================================== */
+    const SoundFX = {
+      ctx: null,
+      enabled: true,
+
+      init() {
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        } catch (e) {
+          console.warn('Áudio não suportado neste navegador:', e);
+        }
+      },
+
+      playTone(freqStart, freqEnd, duration, type = 'square', volume = 0.14, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        try {
+          const now = this.ctx.currentTime + delay;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = type;
+          osc.frequency.setValueAtTime(freqStart, now);
+          if (freqEnd !== freqStart) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(20, freqEnd), now + duration);
+          }
+
+          gain.gain.setValueAtTime(volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + duration);
+        } catch (e) {}
+      },
+
+      click() { this.playTone(520, 780, 0.08, 'square', 0.1); },
+      punch() { this.playTone(190, 65, 0.12, 'sawtooth', 0.18); },
+      kick()  { this.playTone(150, 45, 0.16, 'triangle', 0.22); },
+      special() {
+        this.playTone(280, 880, 0.28, 'sawtooth', 0.16);
+        this.playTone(440, 1120, 0.28, 'sine', 0.14, 0.05);
+      },
+      shieldBlock() { this.playTone(320, 220, 0.11, 'triangle', 0.16); },
+      shieldBreak() {
+        this.playTone(420, 90, 0.25, 'sawtooth', 0.22);
+        this.playTone(240, 55, 0.3, 'square', 0.18, 0.04);
+      },
+      shieldRegen() {
+        this.playTone(523.25, 659.25, 0.14, 'sine', 0.13, 0);
+        this.playTone(659.25, 1046.5, 0.18, 'triangle', 0.12, 0.07);
+      },
+      parry() {
+        this.playTone(980, 1480, 0.16, 'sine', 0.22);
+        this.playTone(1480, 1960, 0.18, 'triangle', 0.18, 0.04);
+      },
+      tick() { this.playTone(880, 880, 0.05, 'sine', 0.08); },
+      roundStart() {
+        this.playTone(330, 330, 0.1, 'square', 0.14, 0);
+        this.playTone(440, 440, 0.1, 'square', 0.14, 0.11);
+        this.playTone(660, 660, 0.22, 'square', 0.16, 0.22);
+      },
+      victory() {
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((n, idx) => {
+          this.playTone(n, n, 0.18, 'square', 0.14, idx * 0.12);
+        });
+      },
+      towerChampion() {
+        const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+        notes.forEach((n, idx) => {
+          this.playTone(n, n, 0.2, 'triangle', 0.16, idx * 0.13);
+        });
+      },
+      fireworkPop() {
+        this.playTone(220 + Math.random() * 180, 48, 0.26, 'sawtooth', 0.11);
+        this.playTone(950 + Math.random() * 600, 320, 0.16, 'sine', 0.08, 0.03);
+      }
+    };
+
+    function toggleAudio() {
+      SoundFX.enabled = !SoundFX.enabled;
+      const btn = document.getElementById('btn-audio-toggle');
+      if (btn) {
+        btn.textContent = SoundFX.enabled ? '🔊 SOM: LIGADO' : '🔇 SOM: MUDO';
+      }
+      if (SoundFX.enabled) SoundFX.click();
+    }
+
+    /* ========================================================================
+       2. CONFIGURAÇÃO DOS 4 NÍVEIS DE DIFICULDADE DA CPU
+       Cada dificuldade ajusta reação, agressividade, defesa, Perfect Parry,
+       alternância de golpes (anti-spam) e multiplicador de dano da IA.
+       ======================================================================== */
+    const CPU_DIFFICULTIES = {
+      facil: {
+        id: 'facil',
+        label: 'FÁCIL',
+        desc: 'Reação lenta e poucos bloqueios',
+        reactionDelay: 26,     // ~0.43s para reagir
+        aggression: 0.032,     // Ataca com pouca frequência
+        blockChance: 0.25,     // Raramente levanta escudo
+        parryChance: 0.03,     // Quase nunca acerta Perfect Parry
+        smartComboChance: 0.2, // Costuma repetir o mesmo golpe
+        damageMult: 0.78       // Dano levemente reduzido
+      },
+      normal: {
+        id: 'normal',
+        label: 'NORMAL',
+        desc: 'Equilibrado e justo',
+        reactionDelay: 15,     // ~0.25s para reagir
+        aggression: 0.068,
+        blockChance: 0.56,
+        parryChance: 0.16,
+        smartComboChance: 0.55,
+        damageMult: 1.0
+      },
+      dificil: {
+        id: 'dificil',
+        label: 'DIFÍCIL',
+        desc: 'Alterna combos e defende bem',
+        reactionDelay: 8,      // ~0.13s para reagir
+        aggression: 0.105,
+        blockChance: 0.80,
+        parryChance: 0.40,
+        smartComboChance: 0.84, // Evita repetir golpes para não perder dano
+        damageMult: 1.12
+      },
+      lendario: {
+        id: 'lendario',
+        label: 'LENDÁRIO',
+        desc: 'Reflexos de ADM e Parry mortal',
+        reactionDelay: 3,      // ~0.05s (quase instantâneo)
+        aggression: 0.145,
+        blockChance: 0.94,
+        parryChance: 0.68,     // Tenta encaixar Perfect Parry no tempo exato
+        smartComboChance: 0.96, // Alterna Soco e Chute quase sempre
+        damageMult: 1.24
+      }
+    };
+
+    /* ========================================================================
+       3. BANCO DE DADOS DOS 8 LUTADORES, PIXEL ART 16x16 E HISTÓRIAS DA TORRE
+       ======================================================================== */
+    const PIXEL_PALETTE = {
+      '.': null,
+      'K': '#090d16',
+      'W': '#ffffff',
+      'S': '#f1c27d',
+      'M': '#c68642',
+      'D': '#8d5524',
+      'B': '#1d4ed8',
+      'C': '#00f0ff',
+      'G': '#16a34a',
+      'L': '#84cc16',
+      'Y': '#ffdf00',
+      'R': '#ef4444',
+      'O': '#f97316',
+      'A': '#94a3b8',
+      'P': '#a855f7'
+    };
+
+    const FIGHTERS_DATA = [
+      {
+        id: 'ednaldo',
+        name: 'Ednaldo Pereira',
+        title: 'O Mestre Supremo',
+        vel: 72, for: 96, def: 90,
+        primaryColor: '#ffffff',
+        secondaryColor: '#002776',
+        accentColor: '#ffdf00',
+        specialName: 'CANHÃO BANIDO!',
+        specialPhrase: 'BANIDO!!',
+        taunt: 'Você não vale nada, você vale tudo... mas hoje será BANIDO da Torre!',
+        storyIntro: 'Sentindo uma perturbação na força dos memes brasileiros, Ednaldo Pereira desce de seu trono celestial para testar os guerreiros da Torre e manter o equilíbrio cósmico.',
+        storyEnding: 'Com um único gesto solene, Ednaldo Pereira restaura a paz na internet brasileira. Todos os memes se curvam diante do Administrador Supremo, que decreta: "VOCÊS ESTÃO DESBANIDOS!"',
+        sprite16: [
+          '....KKKKKKKK....',
+          '...KKKKKKKKKK...',
+          '..KKKKKKKKKKKK..',
+          '..KKSSSSSSSSKK..',
+          '..KKKKKKKKKKKK..',
+          '..KKKKKKKKKKKK..',
+          '..KKSSSSSSSSKK..',
+          '...SSKKKKKKSS...',
+          '....SSSSSSSS....',
+          '...WWWWWWWWWW...',
+          '..WWWWYYYYWWWW..',
+          '.WWWWWWWWWWWWWW.',
+          '.WWWWWWWWWWWWWW.',
+          '.WWWWWWWWWWWWWW.',
+          '..BBBBBBBBBBBB..',
+          '..BBBB....BBBB..'
+        ]
+      },
+      {
+        id: 'caneta',
+        name: 'Caneta Azul',
+        title: 'Manoel Gomes',
+        vel: 80, for: 78, def: 82,
+        primaryColor: '#1d4ed8',
+        secondaryColor: '#0f172a',
+        accentColor: '#38bdf8',
+        specialName: 'ONDA CANETA AZUL!',
+        specialPhrase: 'CANETA AZUL!!',
+        taunt: 'Caneta azul, azul caneta... está marcada com minha letra a sua derrota!',
+        storyIntro: 'Alguém escondeu sua lendária Caneta Azul no topo da Torre! Manoel Gomes parte em uma jornada musical para recuperá-la e compor seu maior hit.',
+        storyEnding: 'No topo da Torre, Manoel Gomes encontra sua Caneta Azul brilhando em ouro! Ele escreve uma nova canção que ecoa por todo o Brasil, celebrada por todos os lutadores.',
+        sprite16: [
+          '....KKKKKKKK....',
+          '...KKKKKKKKKK...',
+          '..KKKKKKKKKKKK..',
+          '..KKMMMMMMMMKK..',
+          '..MMWKWMMWKWMM..',
+          '..MMMMMMMMMMMM..',
+          '..MMWWWWWWWWMM..',
+          '...MMMMMMMMMM...',
+          '....MMMMMMMM....',
+          '...BBBBBBBBBB...',
+          '..BBBBWWWWBBBB..',
+          '.BBBBBBBBBBBBBB.',
+          '.BBBBBBBBBBBBBB.',
+          '.BBBBBBBBBBBBBB.',
+          '..KKKKKKKKKKKK..',
+          '..KKKK....KKKK..'
+        ]
+      },
+      {
+        id: 'galo',
+        name: 'Galo Cego',
+        title: 'O Sábio do Cutuca',
+        vel: 84, for: 86, def: 78,
+        primaryColor: '#b91c1c',
+        secondaryColor: '#334155',
+        accentColor: '#facc15',
+        specialName: 'TERREMOTO CUTUCA!',
+        specialPhrase: 'CUTUCA!!',
+        taunt: 'Se você me cutucar nessa arena, o terremoto vai tremer até o quinto andar!',
+        storyIntro: 'Cansado de ser cutucado sem motivo, o Galo Cego entra na Torre para ensinar respeito filosófico e mostrar a força da sua voadora.',
+        storyEnding: 'Após vencer o Chefão no topo da Torre, o Galo Cego dá uma entrevista histórica explicando a filosofia do combate justo — e ninguém mais ousou cutucá-lo!',
+        sprite16: [
+          '...YYYYYYYYYY...',
+          '..YYYYYYYYYYYY..',
+          '..KKKKKKKKKKKK..',
+          '..KKMMMMMMMMKK..',
+          '..MMKKMMMMKKMM..',
+          '..MMMMMMMMMMMM..',
+          '...MMKKKKKKMM...',
+          '...MMWWWWWWMM...',
+          '....MMMMMMMM....',
+          '..RRRRWWWWWRRRR.',
+          '.RRRRBBBBBBBRRRR',
+          '.RRRRWWWWWWWRRRR',
+          '.RRRRBBBBBBBRRRR',
+          '..BBBBBBBBBBBB..',
+          '..BBBB....BBBB..',
+          '..KKKK....KKKK..'
+        ]
+      },
+      {
+        id: 'borabill',
+        name: 'Bora Bill',
+        title: 'O Rei da Várzea',
+        vel: 88, for: 82, def: 76,
+        primaryColor: '#facc15',
+        secondaryColor: '#15803d',
+        accentColor: '#ffffff',
+        specialName: 'CHUTE BORA BILL!',
+        specialPhrase: 'BORA BILL!!',
+        taunt: 'Bora Bill! Bora fi do Bill! Hoje o placar aqui vai ser goleada!',
+        storyIntro: 'Convocado para o torneio mais difícil da várzea brasileira, Bora Bill sobe a Torre acompanhado da torcida gritando seu nome a cada degrau.',
+        storyEnding: 'Com uma bicicleta espetacular no último round, Bora Bill ergue a taça da Torre ao lado do Fi do Bill e da Mulher do Bill em uma festa inesquecível!',
+        sprite16: [
+          '....KKKKKKKK....',
+          '...KKKKKKKKKK...',
+          '..KKKKKKKKKKKK..',
+          '..KKKKKKKKKKKK..',
+          '..MMKKKKKKKKMM..',
+          '..MMMMMMMMMMMM..',
+          '..MMWWWWWWWWMM..',
+          '...MMMMMMMMMM...',
+          '....MMMMMMMM....',
+          '..YYYYYYYYYYYY..',
+          '.YYYYGGGGGGYYYY.',
+          '.YYYYYYYYYYYYYY.',
+          '.YYYYYYYYYYYYYY.',
+          '..GGGGGGGGGGGG..',
+          '..GGGG....GGGG..',
+          '..WWWW....WWWW..'
+        ]
+      },
+      {
+        id: 'caramelo',
+        name: 'Doguinho Caramelo',
+        title: 'Patrimônio Nacional',
+        vel: 98, for: 76, def: 74,
+        primaryColor: '#ea580c',
+        secondaryColor: '#f97316',
+        accentColor: '#ef4444',
+        specialName: 'LATIDO SUPERSÔNICO!',
+        specialPhrase: 'AU AU AU!!',
+        taunt: 'Au! Au! (Tradução: Pode vir com especial, eu corro atrás até de moto!)',
+        storyIntro: 'Em busca do lendário Pastel de Carne Dourado guardado no topo da Torre, o Doguinho Caramelo dispara em velocidade máxima pelos 5 andares.',
+        storyEnding: 'O Doguinho Caramelo conquista o Pastel de Carne Dourado e é oficialmente coroado Patrimônio Imaterial Supremo de toda a internet brasileira!',
+        sprite16: [
+          '..OO........OO..',
+          '.OOOO......OOOO.',
+          '.OOOOOOOOOOOOOO.',
+          'OOOOOOOOOOOOOOOO',
+          'OOOWKOOOOOOWKOOO',
+          'OOOOOOOOOOOOOOOO',
+          'OOOOOOOKKOOOOOOO',
+          'OOOOOOKKKKOOOOOO',
+          '.OOOOOWWWWOOOOO.',
+          '..OOOOOOOOOOOO..',
+          '...RRRRRRRRRR...',
+          '..OOOOOOOOOOOO..',
+          '.OOOOOOOOOOOOOO.',
+          '.OOOOOOOOOOOOOO.',
+          '..OOOO....OOOO..',
+          '..OOOO....OOOO..'
+        ]
+      },
+      {
+        id: 'luva',
+        name: 'Luva de Pedreiro',
+        title: 'O Melhor do Mundo',
+        vel: 92, for: 88, def: 75,
+        primaryColor: '#16a34a',
+        secondaryColor: '#ffdf00',
+        accentColor: '#00f0ff',
+        specialName: 'CHUTE RECEBA!',
+        specialPhrase: 'RECEBA!!',
+        taunt: 'RECEBA! Graças a Deus, Pai! Hoje você vai conhecer o Melhor do Mundo!',
+        storyIntro: 'Para provar que é o Melhor do Mundo não só no campo de barro mas também no ringue, Luva de Pedreiro calça suas luvas e desafia os 5 mestres da Torre.',
+        storyEnding: 'No topo da Torre, Luva de Pedreiro acerta um chute no ângulo do universo e grita "RECEBA! OBRIGADO MEU DEUS!", tornando-se o Campeão Mundial dos Memes!',
+        sprite16: [
+          '...KKKKKKKKKK...',
+          '..KKKKKKKKKKKK..',
+          '.KKKKKKKKKKKKKK.',
+          '.KKDDDDDDDDDDKK.',
+          '..DDWKWDDWKWDD..',
+          '..DDDDDDDDDDDD..',
+          '..DDWWWWWWWWDD..',
+          '...DDDDDDDDDD...',
+          '....DDDDDDDD....',
+          '..GGGGYYYYGGGG..',
+          '.GGGGGGGGGGGGGG.',
+          'KKGGGGGGGGGGGGKK',
+          'KKGGGGGGGGGGGGKK',
+          '..BBBBBBBBBBBB..',
+          '..BBBB....BBBB..',
+          '..WWWW....WWWW..'
+        ]
+      },
+      {
+        id: 'etbilu',
+        name: 'ET Bilu',
+        title: 'Busquem Conhecimento',
+        vel: 90, for: 84, def: 78,
+        primaryColor: '#64748b',
+        secondaryColor: '#0f172a',
+        accentColor: '#00f0ff',
+        specialName: 'RAIO TELEPÁTICO!',
+        specialPhrase: 'BUSQUEM CONHECIMENTO!',
+        taunt: 'Apenas... busquem conhecimento! A derrota já estava escrita nas estrelas.',
+        storyIntro: 'Vindo de uma galáxia distante até o interior do Brasil, ET Bilu escala a Torre para compartilhar o Conhecimento Supremo com os humanos.',
+        storyEnding: 'Do alto da Torre, ET Bilu ativa um farol cósmico que ilumina o céu brasileiro, deixando uma mensagem eterna: "PARABÉNS, VOCÊS BUSCARAM CONHECIMENTO!"',
+        sprite16: [
+          '....AAAAAAAA....',
+          '..AAAAAAAAAAAA..',
+          '.AAAAAACCCAAAAA.',
+          '.AAAAAAAAAAAAAA.',
+          'AAAKKKKAAAKKKKAA',
+          'AAAKWWKAAAKWWKAA',
+          'AAAKKKKAAAKKKKAA',
+          '.AAAAAAAAAAAAAA.',
+          '..AAAAAAAAAAAA..',
+          '...AAAAKKAAAA...',
+          '....AAAAAAAA....',
+          '..PPPPPPPPPPPP..',
+          '.PPPPCCCCCCPPPP.',
+          '.PPPPPPPPPPPPPP.',
+          '..PPPP....PPPP..',
+          '..AAAA....AAAA..'
+        ]
+      },
+      {
+        id: 'dollynho',
+        name: 'Dollynho',
+        title: 'O Seu Amiguinho',
+        vel: 85, for: 80, def: 88,
+        primaryColor: '#65a30d',
+        secondaryColor: '#ef4444',
+        accentColor: '#fef08a',
+        specialName: 'JATO CÍTRICO!',
+        specialPhrase: 'SOU SEU AMIGUINHO!',
+        taunt: 'Oi, eu sou o Dollynho, seu amiguinho! Vamos brincar de nocaute?',
+        storyIntro: 'Com muita energia e sabor de guaraná, Dollynho decide subir a Torre para espalhar a amizade — mesmo que precise derrotar todo mundo no caminho!',
+        storyEnding: 'Após vencer o Chefão com seu Jato Cítrico, Dollynho distribui guaraná gelado para todos os rivais da Torre, provando que o verdadeiro poder é a amizade!',
+        sprite16: [
+          '.....RRRRRR.....',
+          '....RRRRRRRR....',
+          '....LLLLLLLL....',
+          '...LLLLLLLLLL...',
+          '..LLLLLLLLLLLL..',
+          '..LLWKWLLWKWLL..',
+          '..LLLLLLLLLLLL..',
+          '..LLRWWWWWWRL...',
+          '..LLLLRRRRLLLL..',
+          '.LLLLGGGGGGLLLL.',
+          '.LLLLYYYYYYLLLL.',
+          '.LLLLGGGGGGLLLL.',
+          '.LLLLLLLLLLLLLL.',
+          '..LLLLLLLLLLLL..',
+          '...LLL....LLL...',
+          '..GGGG....GGGG..'
+        ]
+      }
+    ];
+
+    const ARENAS_INFO = {
+      copacabana: { name: 'Calçadão de Copacabana' },
+      varzea:     { name: 'Quadra de Várzea' },
+      feira:      { name: 'Feira Livre & Pastel' },
+      laje:       { name: 'Laje com Churrasco & Pôr do Sol' },
+      amazonia:   { name: 'Encontro das Águas - Amazônia' },
+      sertao:     { name: 'Sertão & Festa Junina' },
+      paulista:   { name: 'Avenida Paulista à Noite' },
+      maracana:   { name: 'Estádio Lotado - Final' },
+      aleatorio:  { name: 'Mapa Aleatório' }
+    };
+
+    const PLAYABLE_ARENA_KEYS = [
+      'copacabana', 'varzea', 'feira', 'laje',
+      'amazonia', 'sertao', 'paulista', 'maracana'
+    ];
+
+    // Pré-renderiza os retratos Pixel Art 16x16 em memória para ficarem super nítidos
+    const portraitCache = {};
+    function buildPortraitCache() {
+      FIGHTERS_DATA.forEach(fighter => {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 16;
+        offCanvas.height = 16;
+        const octx = offCanvas.getContext('2d');
+
+        fighter.sprite16.forEach((row, y) => {
+          for (let x = 0; x < row.length; x++) {
+            const color = PIXEL_PALETTE[row[x]];
+            if (color) {
+              octx.fillStyle = color;
+              octx.fillRect(x, y, 1, 1);
+            }
+          }
+        });
+
+        portraitCache[fighter.id] = offCanvas;
+      });
+    }
+
+    function drawPixelPortraitToCanvas(fighterId, targetCanvas) {
+      if (!targetCanvas || !portraitCache[fighterId]) return;
+      const ctx = targetCanvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+      ctx.drawImage(portraitCache[fighterId], 0, 0, targetCanvas.width, targetCanvas.height);
+    }
+
+    // Desenha miniaturas dos 8 mapas brasileiros + opção Aleatório nos cards de seleção
+    function buildArenaThumbnails() {
+      // 1. Copacabana
+      const c1 = document.getElementById('thumb-copacabana');
+      if (c1) {
+        const x = c1.getContext('2d');
+        x.fillStyle = '#0284c7'; x.fillRect(0, 0, 90, 11);
+        x.fillStyle = '#15803d'; x.beginPath(); x.arc(70, 11, 8, Math.PI, 0); x.fill();
+        x.fillStyle = '#fde68a'; x.fillRect(0, 11, 90, 5);
+        x.fillStyle = '#ffffff'; x.fillRect(0, 16, 90, 6);
+        x.fillStyle = '#0f172a'; x.fillRect(10, 17, 16, 4); x.fillRect(45, 17, 16, 4);
+      }
+      // 2. Várzea
+      const c2 = document.getElementById('thumb-varzea');
+      if (c2) {
+        const x = c2.getContext('2d');
+        x.fillStyle = '#0f172a'; x.fillRect(0, 0, 90, 12);
+        x.fillStyle = '#fef08a'; x.beginPath(); x.arc(20, 4, 3, 0, Math.PI * 2); x.arc(70, 4, 3, 0, Math.PI * 2); x.fill();
+        x.fillStyle = '#9a3412'; x.fillRect(0, 12, 90, 10);
+        x.fillStyle = '#fed7aa'; x.fillRect(10, 16, 70, 2);
+      }
+      // 3. Feira Livre & Pastel
+      const c3 = document.getElementById('thumb-feira');
+      if (c3) {
+        const x = c3.getContext('2d');
+        x.fillStyle = '#1e3a8a'; x.fillRect(0, 0, 90, 22);
+        const stripes = ['#ef4444', '#ffffff', '#facc15', '#ffffff', '#22c55e', '#ffffff'];
+        stripes.forEach((col, i) => {
+          x.fillStyle = col;
+          x.fillRect(i * 15, 6, 15, 8);
+        });
+        x.fillStyle = '#334155'; x.fillRect(0, 15, 90, 7);
+      }
+      // 4. Laje com Churrasco & Pôr do Sol
+      const c4 = document.getElementById('thumb-laje');
+      if (c4) {
+        const x = c4.getContext('2d');
+        const g = x.createLinearGradient(0, 0, 0, 15);
+        g.addColorStop(0, '#7c2d12'); g.addColorStop(1, '#f97316');
+        x.fillStyle = g; x.fillRect(0, 0, 90, 15);
+        x.fillStyle = '#fde047'; x.beginPath(); x.arc(68, 12, 6, 0, Math.PI * 2); x.fill();
+        x.fillStyle = '#0284c7'; x.fillRect(12, 7, 12, 8); // Caixa d'água azul
+        x.fillStyle = '#475569'; x.fillRect(0, 15, 90, 7);
+      }
+      // 5. Encontro das Águas - Amazônia
+      const c5 = document.getElementById('thumb-amazonia');
+      if (c5) {
+        const x = c5.getContext('2d');
+        x.fillStyle = '#14532d'; x.fillRect(0, 0, 90, 9);
+        x.fillStyle = '#0f172a'; x.fillRect(0, 9, 46, 7);   // Rio Negro
+        x.fillStyle = '#b45309'; x.fillRect(46, 9, 44, 7);  // Rio Solimões
+        x.fillStyle = '#78350f'; x.fillRect(0, 16, 90, 6);  // Deck de madeira
+      }
+      // 6. Sertão & Festa Junina
+      const c6 = document.getElementById('thumb-sertao');
+      if (c6) {
+        const x = c6.getContext('2d');
+        x.fillStyle = '#090d16'; x.fillRect(0, 0, 90, 15);
+        x.fillStyle = '#16a34a'; x.fillRect(14, 6, 4, 9);   // Mandacaru
+        x.fillStyle = '#f97316'; x.beginPath(); x.moveTo(45, 7); x.lineTo(50, 15); x.lineTo(40, 15); x.fill(); // Fogueira
+        x.fillStyle = '#9a3412'; x.fillRect(0, 15, 90, 7);
+      }
+      // 7. Avenida Paulista à Noite
+      const c7 = document.getElementById('thumb-paulista');
+      if (c7) {
+        const x = c7.getContext('2d');
+        x.fillStyle = '#020617'; x.fillRect(0, 0, 90, 16);
+        x.fillStyle = '#1e293b'; x.fillRect(10, 3, 14, 13); x.fillRect(66, 2, 16, 14);
+        x.fillStyle = '#dc2626'; x.fillRect(32, 6, 26, 3); x.fillRect(34, 9, 3, 7); x.fillRect(53, 9, 3, 7); // MASP
+        x.fillStyle = '#1e293b'; x.fillRect(0, 16, 90, 6);
+      }
+      // 8. Estádio Lotado - Final
+      const c8 = document.getElementById('thumb-maracana');
+      if (c8) {
+        const x = c8.getContext('2d');
+        x.fillStyle = '#0f172a'; x.fillRect(0, 0, 90, 6);
+        x.fillStyle = '#16a34a'; x.fillRect(0, 6, 45, 8);
+        x.fillStyle = '#facc15'; x.fillRect(45, 6, 45, 8);
+        x.fillStyle = '#15803d'; x.fillRect(0, 14, 90, 8);
+        x.fillStyle = '#ffffff'; x.fillRect(44, 14, 2, 8);
+      }
+      // 9. Mapa Aleatório
+      const c9 = document.getElementById('thumb-aleatorio');
+      if (c9) {
+        const x = c9.getContext('2d');
+        const g = x.createLinearGradient(0, 0, 90, 22);
+        g.addColorStop(0, '#009c3b'); g.addColorStop(0.5, '#ffdf00'); g.addColorStop(1, '#002776');
+        x.fillStyle = g; x.fillRect(0, 0, 90, 22);
+        x.fillStyle = '#090d16'; x.font = 'bold 13px sans-serif'; x.textAlign = 'center';
+        x.fillText('? ? ?', 45, 16);
+      }
+    }
+
+    /* ========================================================================
+       4. ESTADO GLOBAL DO JOGO, DIFICULDADE E PROGRESSÃO DA TORRE
+       ======================================================================== */
+    let platformMode = 'pc';           // 'pc' ou 'mobile'
+    let gameMode = '1P';               // '1P', '2P' ou 'TOWER'
+    let selectedP1 = 0;                // Índice do lutador 1 (0..7)
+    let selectedP2 = 1;                // Índice do lutador 2 (0..7)
+    let nextPickIsP2 = false;
+    let selectedArena = 'copacabana';  // Mapa escolhido na UI (ou 'aleatorio')
+    let activeBattleArena = 'copacabana'; // Mapa efetivo em execução na arena
+    let selectedRoundTime = 60;        // 30, 60, 90 ou null (∞)
+    let cpuDifficulty = 'normal';      // 'facil', 'normal', 'dificil', 'lendario'
+
+    // Estado da Torre Arcade (5 Degraus)
+    let towerState = {
+      active: false,
+      playerFighterIndex: 0,
+      currentStep: 0,                  // 0 a 4 (Degrau 1 a Degrau 5 Chefão)
+      steps: [],                       // Array com os 5 degraus gerados
+      continuesUsed: 0
+    };
+
+    // Estado da luta atual
+    let currentScreen = 'platform-screen';
+    let roundNumber = 1;
+    let p1RoundsWon = 0;
+    let p2RoundsWon = 0;
+    let roundTimer = 60;
+    let roundTimerFrames = 0;
+    let roundState = 'IDLE';
+    let stateTimer = 0;
+    let screenShake = 0;
+    let hitstopFrames = 0;
+    let isCurrentBattleBoss = false;
+
+    let fighter1 = null;
+    let fighter2 = null;
+    let projectiles = [];
+    let particles = [];
+    let floatingTexts = [];
+
+    const keysDown = {};
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+      currentScreen = screenId;
+    }
+
+    // Seleciona a versão do jogo: 'pc' (Teclado) ou 'mobile' (Celular Touch)
+    function selectPlatform(mode) {
+      SoundFX.click();
+      platformMode = mode;
+      const isMobile = mode === 'mobile';
+
+      document.body.classList.toggle('mobile-mode', isMobile);
+      document.body.classList.toggle('pc-mode', !isMobile);
+      document.body.classList.remove('ignore-rotate');
+
+      // Atualiza indicador e guia de controles na Tela Inicial
+      const badge = document.getElementById('platform-badge-indicator');
+      if (badge) {
+        badge.textContent = isMobile
+          ? '📱 MODO CELULAR (TOUCH) ATIVO • 🇧🇷 FLIPERAMA'
+          : '💻 MODO COMPUTADOR (PC) ATIVO • 🇧🇷 FLIPERAMA';
+      }
+
+      const pcGuide = document.getElementById('start-controls-pc');
+      const mobGuide = document.getElementById('start-controls-mobile');
+      if (pcGuide) pcGuide.style.display = isMobile ? 'none' : 'grid';
+      if (mobGuide) mobGuide.style.display = isMobile ? 'grid' : 'none';
+
+      // Tenta bloquear orientação em paisagem se o navegador móvel permitir
+      if (isMobile && screen.orientation && screen.orientation.lock) {
+        try {
+          screen.orientation.lock('landscape').catch(() => {});
+        } catch (e) {}
+      }
+
+      showScreen('start-screen');
+    }
+
+    function dismissRotateOverlay() {
+      SoundFX.click();
+      document.body.classList.add('ignore-rotate');
+    }
+
+    // Abre a Tela de Seleção configurada para 1P, 2P ou Modo Torre
+    function goToSelect(mode) {
+      SoundFX.click();
+      gameMode = mode;
+      nextPickIsP2 = false;
+
+      const is2P = mode === '2P';
+      const isTower = mode === 'TOWER';
+
+      // Alterna painéis da direita (Rival J2 vs História da Torre)
+      document.getElementById('p2-panel-normal').style.display = isTower ? 'none' : 'flex';
+      document.getElementById('p2-panel-tower').style.display = isTower ? 'flex' : 'none';
+
+      // Ativa ou desativa o seletor de dificuldade da CPU conforme o modo
+      document.getElementById('cpu-diff-box').classList.toggle('disabled-box', is2P);
+      document.getElementById('arena-select-box').classList.toggle('disabled-box', isTower);
+      document.getElementById('arena-tower-note').style.display = isTower ? 'inline' : 'none';
+
+      // Ajusta textos e botões
+      document.getElementById('p2-preview-tag').textContent = is2P ? 'JOGADOR 2' : 'CPU (J2)';
+      document.getElementById('select-mode-title').textContent = isTower
+        ? 'MODO TORRE: ESCOLHA SEU HERÓI E A DIFICULDADE'
+        : is2P
+        ? '2 JOGADORES: ESCOLHAM SEUS LUTADORES E ARENA'
+        : '1 JOGADOR: ESCOLHA SEU LUTADOR, RIVAL E DIFICULDADE';
+
+      document.getElementById('select-turn-hint').textContent = isTower
+        ? 'Clique em um lutador para ver sua história na Torre!'
+        : is2P
+        ? 'Clique alterna J1 e J2 (ou Shift+Clique p/ J2)'
+        : 'Clique p/ J1 • Botão Direito ou Shift+Clique p/ CPU';
+
+      const confirmBtn = document.getElementById('btn-confirm-select');
+      if (isTower) {
+        confirmBtn.textContent = '🏰 ENTRAR NA TORRE!';
+        confirmBtn.className = 'btn-arcade btn-roxo';
+      } else {
+        confirmBtn.textContent = '🔥 LUTAR! 🔥';
+        confirmBtn.className = 'btn-arcade btn-verde';
+      }
+
+      updateSelectionUI();
+      showScreen('select-screen');
+    }
+
+    function selectCpuDifficulty(diffKey) {
+      SoundFX.click();
+      cpuDifficulty = diffKey;
+      const info = CPU_DIFFICULTIES[diffKey];
+
+      // Sincroniza os botões tanto na Tela de Seleção quanto na Tela da Torre
+      document.querySelectorAll('[data-diff-group] .option-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.diff === diffKey);
+      });
+
+      const d1 = document.getElementById('diff-desc-label');
+      const d2 = document.getElementById('tower-diff-desc');
+      if (d1) d1.textContent = info.desc;
+      if (d2) d2.textContent = info.desc;
+    }
+
+    function selectArena(arenaId) {
+      SoundFX.click();
+      selectedArena = arenaId;
+      document.querySelectorAll('#arena-options .option-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.arena === arenaId);
+      });
+    }
+
+    function selectRoundTime(seconds) {
+      SoundFX.click();
+      selectedRoundTime = seconds;
+      document.querySelectorAll('#time-options .option-chip').forEach(chip => {
+        const val = chip.dataset.time === 'null' ? null : Number(chip.dataset.time);
+        chip.classList.toggle('active', val === seconds);
+      });
+    }
+
+    function buildRosterGrid() {
+      const grid = document.getElementById('roster-grid');
+      grid.innerHTML = '';
+      FIGHTERS_DATA.forEach((f, idx) => {
+        const card = document.createElement('div');
+        card.className = 'fighter-card';
+        card.dataset.index = idx;
+
+        card.innerHTML = `
+          <div class="card-badges">
+            <span class="p-badge p1" style="display:none">J1</span>
+            <span class="p-badge p2" style="display:none">J2</span>
+          </div>
+          <canvas width="46" height="46"></canvas>
+          <div class="fighter-card-name">${f.name}</div>
+        `;
+
+        drawPixelPortraitToCanvas(f.id, card.querySelector('canvas'));
+
+        card.addEventListener('click', (e) => {
+          SoundFX.click();
+          if (gameMode === 'TOWER') {
+            selectedP1 = idx;
+          } else if (e.shiftKey) {
+            selectedP2 = idx;
+          } else if (gameMode === '2P') {
+            if (!nextPickIsP2) {
+              selectedP1 = idx;
+              nextPickIsP2 = true;
+            } else {
+              selectedP2 = idx;
+              nextPickIsP2 = false;
+            }
+          } else {
+            selectedP1 = idx;
+          }
+          updateSelectionUI();
+        });
+
+        card.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          if (gameMode === 'TOWER') return;
+          SoundFX.click();
+          selectedP2 = idx;
+          updateSelectionUI();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function randomizeFighters() {
+      SoundFX.click();
+      selectedP1 = Math.floor(Math.random() * FIGHTERS_DATA.length);
+      if (gameMode !== 'TOWER') {
+        do {
+          selectedP2 = Math.floor(Math.random() * FIGHTERS_DATA.length);
+        } while (selectedP2 === selectedP1);
+      }
+      updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+      const showP2Badge = gameMode !== 'TOWER';
+      document.querySelectorAll('.fighter-card').forEach((card, idx) => {
+        const isP1 = idx === selectedP1;
+        const isP2 = showP2Badge && idx === selectedP2;
+        card.classList.toggle('selected-p1', isP1);
+        card.classList.toggle('selected-p2', isP2);
+        card.querySelector('.p-badge.p1').style.display = isP1 ? 'inline-block' : 'none';
+        card.querySelector('.p-badge.p2').style.display = isP2 ? 'inline-block' : 'none';
+      });
+
+      const f1 = FIGHTERS_DATA[selectedP1];
+      const f2 = FIGHTERS_DATA[selectedP2];
+
+      document.getElementById('p1-preview-name').textContent = f1.name;
+      document.getElementById('p1-preview-title').textContent = f1.title;
+      document.getElementById('p1-stat-vel').style.width = f1.vel + '%';
+      document.getElementById('p1-stat-for').style.width = f1.for + '%';
+      document.getElementById('p1-stat-def').style.width = f1.def + '%';
+      drawPixelPortraitToCanvas(f1.id, document.getElementById('p1-pixel-badge'));
+
+      // Atualiza história do lutador no painel do Modo Torre
+      document.getElementById('tower-lore-fighter-title').textContent = `História de ${f1.name}:`;
+      document.getElementById('tower-lore-text').textContent = f1.storyIntro;
+
+      // Atualiza painel J2 (1P/2P)
+      document.getElementById('p2-preview-name').textContent = f2.name;
+      document.getElementById('p2-preview-title').textContent = f2.title;
+      document.getElementById('p2-stat-vel').style.width = f2.vel + '%';
+      document.getElementById('p2-stat-for').style.width = f2.for + '%';
+      document.getElementById('p2-stat-def').style.width = f2.def + '%';
+      drawPixelPortraitToCanvas(f2.id, document.getElementById('p2-pixel-badge'));
+    }
+
+    function confirmSelection() {
+      if (gameMode === 'TOWER') {
+        initTowerMode(selectedP1);
+      } else {
+        isCurrentBattleBoss = false;
+        startMatch();
+      }
+    }
+
+    /* ========================================================================
+       5. LÓGICA DO MODO HISTÓRIA / TORRE (ESCADA DE 5 DEGRAUS + CHEFÃO FINAL)
+       ======================================================================== */
+    function initTowerMode(playerIdx) {
+      SoundFX.click();
+      const playerFighter = FIGHTERS_DATA[playerIdx];
+
+      // Define o Chefão Final (Degrau 5):
+      // Ednaldo Pereira por padrão, ou Luva de Pedreiro se o jogador escolheu Ednaldo!
+      const bossId = playerFighter.id === 'ednaldo' ? 'luva' : 'ednaldo';
+      const bossIndex = FIGHTERS_DATA.findIndex(f => f.id === bossId);
+
+      // Seleciona 4 rivais únicos para os Degraus 1 a 4 (sem repetir o jogador nem o Chefão)
+      const candidates = FIGHTERS_DATA
+        .map((f, idx) => idx)
+        .filter(idx => idx !== playerIdx && idx !== bossIndex);
+
+      // Embaralha os candidatos (Fisher-Yates)
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
+
+      const selectedRivals = candidates.slice(0, 4);
+      const arenaRotation = ['varzea', 'feira', 'sertao', 'paulista', 'maracana'];
+
+      const steps = [];
+      for (let s = 0; s < 5; s++) {
+        const isBoss = (s === 4);
+        const oppIndex = isBoss ? bossIndex : selectedRivals[s];
+        const oppData = FIGHTERS_DATA[oppIndex];
+
+        steps.push({
+          stepNumber: s + 1,
+          opponentIndex: oppIndex,
+          opponentData: oppData,
+          arenaId: arenaRotation[s],
+          isBoss: isBoss,
+          taunt: isBoss
+            ? `CHEFÃO FINAL: "${oppData.taunt}"`
+            : oppData.taunt
+        });
+      }
+
+      towerState = {
+        active: true,
+        playerFighterIndex: playerIdx,
+        currentStep: 0,
+        steps: steps,
+        continuesUsed: 0
+      };
+
+      renderTowerScreen();
+      showScreen('screen-tower');
+    }
+
+    function renderTowerScreen() {
+      const playerData = FIGHTERS_DATA[towerState.playerFighterIndex];
+      const currentObj = towerState.steps[towerState.currentStep];
+
+      document.getElementById('tower-progress-subtitle').textContent =
+        `Desafiante: ${playerData.name} • Degrau ${towerState.currentStep + 1} de 5`;
+
+      // Preenche o card VS do confronto atual
+      drawPixelPortraitToCanvas(playerData.id, document.getElementById('tower-player-portrait'));
+      document.getElementById('tower-player-name').textContent = playerData.name;
+
+      drawPixelPortraitToCanvas(currentObj.opponentData.id, document.getElementById('tower-enemy-portrait'));
+      document.getElementById('tower-enemy-name').textContent = currentObj.opponentData.name;
+      document.getElementById('tower-enemy-badge').textContent = currentObj.isBoss
+        ? '👑 CHEFÃO FINAL (115 HP)'
+        : `DEGRAU ${currentObj.stepNumber}/5`;
+
+      document.getElementById('tower-taunt-speaker').textContent =
+        `💬 ${currentObj.opponentData.name.toUpperCase()} DIZ:`;
+      document.getElementById('tower-taunt-text').textContent = `"${currentObj.taunt}"`;
+
+      // Renderiza os 5 degraus de CIMA para BAIXO (Chefão 5 no topo, Degrau 1 na base)
+      const listEl = document.getElementById('tower-ladder-list');
+      listEl.innerHTML = '';
+
+      for (let i = towerState.steps.length - 1; i >= 0; i--) {
+        const st = towerState.steps[i];
+        const isCompleted = i < towerState.currentStep;
+        const isCurrent = i === towerState.currentStep;
+        const isLocked = i > towerState.currentStep;
+
+        const card = document.createElement('div');
+        card.className = 'tower-step-card';
+        if (st.isBoss) card.classList.add('boss-step');
+        if (isCompleted) card.classList.add('completed');
+        if (isCurrent) card.classList.add('current');
+        if (isLocked) card.classList.add('locked');
+
+        const statusLabel = isCompleted
+          ? '✅ VENCIDO'
+          : isCurrent
+          ? '⚔️ PRÓXIMA LUTA'
+          : '🔒 BLOQUEADO';
+
+        card.innerHTML = `
+          <div class="step-number-badge">${isCompleted ? '✓' : st.stepNumber}</div>
+          <canvas class="step-portrait" width="44" height="44"></canvas>
+          <div class="step-info">
+            <div class="step-name-row">
+              <strong>${st.opponentData.name}</strong>
+              ${st.isBoss ? '<span class="boss-tag">👑 CHEFÃO • 115 HP</span>' : ''}
+            </div>
+            <div class="step-arena-label">📍 ${ARENAS_INFO[st.arenaId].name}</div>
+          </div>
+          <span class="step-status-pill">${statusLabel}</span>
+        `;
+
+        drawPixelPortraitToCanvas(st.opponentData.id, card.querySelector('canvas'));
+        listEl.appendChild(card);
+      }
+    }
+
+    function startTowerBattle() {
+      SoundFX.click();
+      const stepObj = towerState.steps[towerState.currentStep];
+      selectedP1 = towerState.playerFighterIndex;
+      selectedP2 = stepObj.opponentIndex;
+      selectedArena = stepObj.arenaId;
+      isCurrentBattleBoss = stepObj.isBoss;
+      startMatch();
+    }
+
+    function abandonTower() {
+      SoundFX.click();
+      towerState.active = false;
+      isCurrentBattleBoss = false;
+      showScreen('start-screen');
+    }
+
+    /* ========================================================================
+       6. CLASSE FIGHTER (LUTADOR): FÍSICA, COMBATE E ESCUDO REGENERATIVO
+       ======================================================================== */
+    const GROUND_Y = 545;
+    const ARENA_LEFT = 70;
+    const ARENA_RIGHT = 1210;
+    const GRAVITY = 0.85;
+
+    class Fighter {
+      constructor(playerNum, data, x, facing, isBoss = false) {
+        this.playerNum = playerNum;
+        this.data = data;
+        this.x = x;
+        this.y = GROUND_Y;
+        this.vx = 0;
+        this.vy = 0;
+        this.width = 68;
+        this.height = 148;
+        this.facing = facing;
+        this.isBoss = isBoss;
+
+        // Chefão Final da Torre tem exatamente 115 de HP; lutadores normais têm ~100 HP
+        this.maxHp = isBoss ? 115 : (92 + Math.round(data.def * 0.1));
+        this.hp = this.maxHp;
+        this.ghostHp = this.maxHp;
+
+        this.maxSuper = 100;
+        this.superCharge = 0;
+
+        this.maxStamina = 100;
+        this.stamina = 100;
+        this.exhausted = false;
+
+        // Escudo com 3 pontos de vida + Regeneração Passiva
+        this.maxShieldHp = 3;
+        this.shieldHp = 3;
+        this.isBlocking = false;
+        this.blockFrames = 0;
+        this.shieldBreakTimer = 0;
+        this.shieldRegenDelay = 0;
+        this.shieldRegenProgress = 0;
+
+        // Estados de ataque e IA
+        this.attackState = null;
+        this.attackTimer = 0;
+        this.attackDuration = 0;
+        this.attackHasHit = false;
+        this.lastMoveType = null;
+        this.spamCount = 0;
+
+        this.hurtTimer = 0;
+        this.stunTimer = 0;
+        this.animTick = 0;
+
+        // Temporizadores internos de reação da CPU
+        this.aiReactionCounter = 0;
+        this.aiCachedInput = { left: false, right: false, up: false, block: false, punch: false, kick: false, special: false };
+      }
+
+      get isGrounded() {
+        return this.y >= GROUND_Y;
+      }
+
+      get moveSpeed() {
+        const base = 4.6 + (this.data.vel / 100) * 2.8;
+        return this.exhausted ? base * 0.55 : base;
+      }
+
+      get powerMult() {
+        let mult = 0.85 + (this.data.for / 100) * 0.35;
+        // Se for CPU, aplica também o multiplicador da dificuldade selecionada
+        if (this.playerNum === 2 && gameMode !== '2P') {
+          mult *= CPU_DIFFICULTIES[cpuDifficulty].damageMult;
+        }
+        return mult;
+      }
+
+      update(opponent, input) {
+        this.animTick++;
+
+        if (this.ghostHp > this.hp) {
+          this.ghostHp = Math.max(this.hp, this.ghostHp - this.maxHp * 0.008);
+        }
+
+        if (this.hurtTimer > 0) this.hurtTimer--;
+        if (this.stunTimer > 0) {
+          this.stunTimer--;
+          this.isBlocking = false;
+          this.applyPhysics();
+          return;
+        }
+
+        // Regeneração de fôlego (Stamina)
+        if (!this.attackState) {
+          const regenRate = this.isBlocking ? 0.16 : 0.38;
+          this.stamina = Math.min(this.maxStamina, this.stamina + regenRate);
+          if (this.exhausted && this.stamina >= 40) {
+            this.exhausted = false;
+          }
+        }
+
+        // Lógica do Escudo de 3 Golpes + Regeneração Passiva
+        if (this.shieldBreakTimer > 0) {
+          this.isBlocking = false;
+          this.blockFrames = 0;
+          this.shieldBreakTimer--;
+          if (this.shieldBreakTimer <= 0) {
+            this.shieldHp = this.maxShieldHp;
+            this.shieldRegenDelay = 0;
+            this.shieldRegenProgress = 0;
+            SoundFX.shieldRegen();
+            spawnFloatingText(this.x, this.y - 165, 'ESCUDO RESTAURADO!', '#00f0ff');
+            spawnParticles(this.x, this.y - 80, '#00f0ff', 16);
+          }
+        } else {
+          const wantsBlock = input.block && !this.attackState && this.isGrounded;
+
+          if (wantsBlock) {
+            if (!this.isBlocking) {
+              this.isBlocking = true;
+              this.blockFrames = 0;
+            }
+            this.blockFrames++;
+
+            if (this.shieldHp < this.maxShieldHp) {
+              this.shieldRegenProgress = 0;
+              this.shieldRegenDelay = 90; // 1.5s de espera após soltar defesa
+            }
+          } else {
+            this.isBlocking = false;
+            this.blockFrames = 0;
+
+            if (this.shieldHp < this.maxShieldHp) {
+              if (this.shieldRegenDelay > 0) {
+                this.shieldRegenDelay--;
+              } else {
+                this.shieldRegenProgress++;
+                if (this.shieldRegenProgress >= 150) { // +1 HP a cada 2.5s
+                  this.shieldHp = Math.min(this.maxShieldHp, this.shieldHp + 1);
+                  this.shieldRegenProgress = 0;
+                  SoundFX.shieldRegen();
+                  spawnFloatingText(this.x, this.y - 165, '+1 ESCUDO!', '#00f0ff');
+                  spawnParticles(this.x, this.y - 80, '#00f0ff', 14);
+                }
+              }
+            } else {
+              this.shieldRegenDelay = 0;
+              this.shieldRegenProgress = 0;
+            }
+          }
+        }
+
+        if (!this.attackState) {
+          this.facing = opponent.x >= this.x ? 1 : -1;
+        }
+
+        if (this.attackState) {
+          this.updateAttack(opponent);
+        } else if (!this.isBlocking) {
+          if (input.left) {
+            this.vx = -this.moveSpeed;
+          } else if (input.right) {
+            this.vx = this.moveSpeed;
+          } else {
+            this.vx *= 0.72;
+          }
+
+          if (input.up && this.isGrounded && !this.exhausted) {
+            this.vy = -17.5;
+            this.stamina = Math.max(0, this.stamina - 8);
+          }
+
+          if (input.special && this.superCharge >= this.maxSuper) {
+            this.startAttack('special');
+          } else if (input.punch && !this.exhausted) {
+            this.startAttack('punch');
+          } else if (input.kick && !this.exhausted) {
+            this.startAttack('kick');
+          }
+        } else {
+          this.vx *= 0.6;
+        }
+
+        this.applyPhysics();
+      }
+
+      applyPhysics() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (!this.isGrounded) {
+          this.vy += GRAVITY;
+        } else {
+          this.y = GROUND_Y;
+          this.vy = 0;
+        }
+
+        this.x = Math.max(ARENA_LEFT, Math.min(ARENA_RIGHT, this.x));
+      }
+
+      startAttack(type) {
+        if (type === 'punch') {
+          if (this.stamina < 12) return;
+          this.stamina -= 12;
+          this.attackState = 'punch';
+          this.attackDuration = 18;
+          SoundFX.punch();
+        } else if (type === 'kick') {
+          if (this.stamina < 20) return;
+          this.stamina -= 20;
+          this.attackState = 'kick';
+          this.attackDuration = 24;
+          SoundFX.kick();
+        } else if (type === 'special') {
+          this.superCharge = 0;
+          this.attackState = 'special';
+          this.attackDuration = 34;
+          SoundFX.special();
+          spawnFloatingText(this.x, this.y - 175, this.data.specialPhrase, '#ffdf00');
+          screenShake = 8;
+        }
+
+        if (this.stamina <= 0) {
+          this.stamina = 0;
+          this.exhausted = true;
+          spawnFloatingText(this.x, this.y - 150, 'EXAUSTO!', '#ef4444');
+        }
+
+        // Sistema Anti-Spam: alternar golpes dá COMBO 100%, repetir reduz para 60% e 25%
+        if (this.lastMoveType === type && type !== 'special') {
+          this.spamCount++;
+        } else {
+          if (this.lastMoveType && type !== 'special') {
+            spawnFloatingText(this.x, this.y - 135, 'COMBO! 100%', '#4ade80');
+          }
+          this.spamCount = 0;
+        }
+        this.lastMoveType = type;
+
+        this.attackTimer = 0;
+        this.attackHasHit = false;
+      }
+
+      getAntiSpamMultiplier() {
+        if (this.spamCount === 0) return 1.0;
+        if (this.spamCount === 1) return 0.6;
+        return 0.25;
+      }
+
+      updateAttack(opponent) {
+        this.attackTimer++;
+        this.vx *= 0.8;
+
+        const activeStart = Math.floor(this.attackDuration * 0.3);
+        const activeEnd = Math.floor(this.attackDuration * 0.65);
+
+        if (!this.attackHasHit && this.attackTimer >= activeStart && this.attackTimer <= activeEnd) {
+          if (this.attackState === 'special') {
+            this.attackHasHit = true;
+            projectiles.push({
+              owner: this,
+              fighterId: this.data.id,
+              x: this.x + this.facing * 55,
+              y: this.y - 78,
+              vx: this.facing * 13.5,
+              radius: 36,
+              damage: Math.max(12, Math.round(19 * this.powerMult)),
+              color: this.data.accentColor,
+              phrase: this.data.specialPhrase,
+              life: 90
+            });
+          } else {
+            const reach = this.attackState === 'punch' ? 98 : 118;
+            const dist = Math.abs((this.x + this.facing * 35) - opponent.x);
+            const heightDiff = Math.abs(this.y - opponent.y);
+
+            if (dist <= reach && heightDiff < 85) {
+              this.attackHasHit = true;
+              const baseDmg = this.attackState === 'punch' ? 6 : 9;
+              const spamMult = this.getAntiSpamMultiplier();
+              const finalDmg = Math.max(1, Math.round(baseDmg * this.powerMult * spamMult));
+
+              if (spamMult === 0.6) {
+                spawnFloatingText(this.x, this.y - 145, 'REPETIDO! -40%', '#f97316');
+              } else if (spamMult < 0.6) {
+                spawnFloatingText(this.x, this.y - 145, 'SPAM! -75%', '#ef4444');
+              }
+
+              opponent.receiveHit(finalDmg, this, this.attackState === 'kick' ? 11 : 6);
+            }
+          }
+        }
+
+        if (this.attackTimer >= this.attackDuration) {
+          this.attackState = null;
+          this.attackTimer = 0;
+        }
+      }
+
+      receiveHit(damage, attacker, knockback) {
+        // 1. Verifica defesa com escudo ativo
+        if (this.isBlocking && this.shieldBreakTimer <= 0 && this.shieldHp > 0) {
+          // PERFECT PARRY: bloqueou nos primeiros 0.2s (12 frames)
+          if (this.blockFrames <= 12) {
+            SoundFX.parry();
+            this.stamina = Math.min(this.maxStamina, this.stamina + 20);
+            this.superCharge = Math.min(this.maxSuper, this.superCharge + 18);
+            attacker.stunTimer = 34;
+            attacker.vx = -attacker.facing * 8;
+            hitstopFrames = 5;
+            screenShake = 7;
+            spawnFloatingText(this.x, this.y - 165, '⚡ PERFECT PARRY! ⚡', '#00f0ff');
+            spawnParticles(this.x + this.facing * 30, this.y - 80, '#00f0ff', 22);
+            return;
+          }
+
+          // Bloqueio normal: absorve 100% do dano na vida, gasta 1 ponto do escudo
+          this.shieldHp--;
+          this.shieldRegenDelay = 90;
+          this.shieldRegenProgress = 0;
+          this.vx = -this.facing * (knockback * 0.7);
+          hitstopFrames = 3;
+
+          if (this.shieldHp <= 0) {
+            this.shieldHp = 0;
+            this.isBlocking = false;
+            this.stunTimer = 42;
+            this.shieldBreakTimer = 210;
+            screenShake = 10;
+            SoundFX.shieldBreak();
+            spawnFloatingText(this.x, this.y - 165, '💥 ESCUDO QUEBRADO! 💥', '#ef4444');
+            spawnParticles(this.x, this.y - 80, '#ef4444', 26);
+          } else {
+            SoundFX.shieldBlock();
+            const cor = this.shieldHp === 2 ? '#facc15' : '#ef4444';
+            spawnFloatingText(this.x, this.y - 155, `BLOQUEOU! (${this.shieldHp}/3)`, cor);
+            spawnParticles(this.x + this.facing * 28, this.y - 80, cor, 12);
+          }
+          return;
+        }
+
+        // 2. Dano direto
+        this.hp = Math.max(0, this.hp - damage);
+        this.hurtTimer = 14;
+        this.attackState = null;
+        this.vx = -this.facing * knockback;
+        if (knockback >= 10) this.vy = -5.5;
+
+        attacker.superCharge = Math.min(attacker.maxSuper, attacker.superCharge + damage * 1.45);
+        this.superCharge = Math.min(this.maxSuper, this.superCharge + damage * 1.0);
+
+        hitstopFrames = 4;
+        screenShake = Math.min(12, Math.round(damage * 0.8));
+        triggerHudDamageFlash(this.playerNum);
+        spawnFloatingText(this.x, this.y - 145, `-${damage}`, '#ffdf00');
+        spawnParticles(this.x, this.y - 80, '#ffdf00', 16);
+      }
+    }
+
+    function triggerHudDamageFlash(playerNum) {
+      const el = document.getElementById(`p${playerNum}-hp-outer`);
+      if (el) {
+        el.classList.remove('damage-flash');
+        void el.offsetWidth;
+        el.classList.add('damage-flash');
+      }
+      const portrait = document.getElementById(`hud-p${playerNum}-portrait`);
+      if (portrait) {
+        portrait.classList.remove('portrait-hit');
+        void portrait.offsetWidth;
+        portrait.classList.add('portrait-hit');
+      }
+    }
+
+    /* ========================================================================
+       7. PARTÍCULAS, TEXTOS FLUTUANTES E RENDERIZAÇÃO DAS 8 ARENAS COM PARALLAX
+       ======================================================================== */
+    function spawnParticles(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 6;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2,
+          size: 3 + Math.random() * 4,
+          color,
+          life: 22 + Math.floor(Math.random() * 14)
+        });
+      }
+    }
+
+    function spawnFloatingText(x, y, text, color) {
+      floatingTexts.push({ x, y, text, color, life: 52 });
+    }
+
+    // Desenha um dos 8 mapas brasileiros animados com múltiplas camadas de parallax
+    function drawArenaBackground(ctx, w, h) {
+      const t = Date.now() * 0.001;
+      const midX = (fighter1 && fighter2) ? (fighter1.x + fighter2.x) * 0.5 : w * 0.5;
+      const camX = midX - w * 0.5; // Deslocamento horizontal para efeito parallax
+
+      if (activeBattleArena === 'copacabana') {
+        // 1. CALÇADÃO DE COPACABANA
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.68);
+        sky.addColorStop(0, '#0284c7');
+        sky.addColorStop(1, '#7dd3fc');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Sol distante (parallax lento)
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(1050 - camX * 0.08, 105, 48, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pão de Açúcar e morros (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.18, 0);
+        ctx.fillStyle = '#15803d';
+        ctx.beginPath();
+        ctx.moveTo(740, 430);
+        ctx.quadraticCurveTo(870, 195, 980, 430);
+        ctx.quadraticCurveTo(1080, 245, 1210, 430);
+        ctx.fill();
+        ctx.restore();
+
+        // Mar com ondas animadas
+        ctx.fillStyle = '#0369a1';
+        ctx.fillRect(0, 415, w, 78);
+        ctx.fillStyle = '#e0f2fe';
+        for (let wx = -60; wx < w + 60; wx += 90) {
+          ctx.fillRect(wx - camX * 0.25 + Math.sin(t * 3 + wx) * 12, 442, 56, 4);
+          ctx.fillRect(wx + 30 - camX * 0.3 + Math.cos(t * 2.5 + wx) * 10, 466, 44, 3);
+        }
+
+        // Areia e Quiosque de Praia (parallax próximo)
+        ctx.fillStyle = '#fde68a';
+        ctx.fillRect(0, 490, w, 50);
+
+        ctx.save();
+        ctx.translate(-camX * 0.4, 0);
+        // Quiosque
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(160, 415, 12, 82);
+        ctx.fillRect(280, 415, 12, 82);
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath();
+        ctx.moveTo(135, 418);
+        ctx.lineTo(226, 378);
+        ctx.lineTo(317, 418);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#ffdf00';
+        ctx.fillRect(156, 456, 140, 38);
+
+        // Coqueiros
+        [520, 1140].forEach(px => {
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 11;
+          ctx.beginPath();
+          ctx.moveTo(px, 496);
+          ctx.quadraticCurveTo(px - 14, 410, px + 8, 340);
+          ctx.stroke();
+          ctx.fillStyle = '#16a34a';
+          for (let a = 0; a < 5; a++) {
+            const ang = -2.4 + a * 0.6 + Math.sin(t * 2 + px) * 0.05;
+            ctx.beginPath();
+            ctx.ellipse(px + 8 + Math.cos(ang) * 26, 340 + Math.sin(ang) * 16, 26, 7, ang, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+        ctx.restore();
+
+        // Calçadão preto e branco ondulado
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, GROUND_Y - 12, w, h - GROUND_Y + 12);
+        ctx.fillStyle = '#0f172a';
+        for (let cx = -80; cx < w + 80; cx += 80) {
+          ctx.beginPath();
+          ctx.arc(cx - camX * 0.55, GROUND_Y + 18, 28, 0, Math.PI);
+          ctx.fill();
+        }
+
+      } else if (activeBattleArena === 'varzea') {
+        // 2. QUADRA DE VÁRZEA NOTURNA
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.75);
+        sky.addColorStop(0, '#090d16');
+        sky.addColorStop(1, '#1e293b');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Refletores noturnos com feixes de luz
+        ctx.save();
+        ctx.translate(-camX * 0.16, 0);
+        [240, 1040].forEach(rx => {
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(rx - 5, 130, 10, 260);
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(rx - 26, 118, 52, 18);
+
+          const beam = ctx.createLinearGradient(rx, 130, rx, 540);
+          beam.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
+          beam.addColorStop(1, 'rgba(254, 240, 138, 0)');
+          ctx.fillStyle = beam;
+          ctx.beginPath();
+          ctx.moveTo(rx - 22, 136);
+          ctx.lineTo(rx + 22, 136);
+          ctx.lineTo(rx + 180, 540);
+          ctx.lineTo(rx - 180, 540);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.restore();
+
+        // Muro grafitado
+        ctx.save();
+        ctx.translate(-camX * 0.32, 0);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(-100, 385, w + 200, 160);
+        ctx.fillStyle = '#facc15';
+        ctx.font = '900 32px Impact, sans-serif';
+        ctx.fillText('VÁRZEA RAIZ • BRASIL', 190, 448);
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillText('MEME KOMBAT', 790, 452);
+
+        // Alambrado metálico
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 2;
+        for (let gx = -80; gx < w + 80; gx += 32) {
+          ctx.beginPath();
+          ctx.moveTo(gx, 315);
+          ctx.lineTo(gx + 24, 535);
+          ctx.stroke();
+        }
+
+        // Cachorro Caramelo na torcida abanando o rabo
+        const dogX = 640;
+        const dogY = 528 - Math.abs(Math.sin(t * 6)) * 5;
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(dogX - 16, dogY - 22, 32, 18);
+        ctx.beginPath();
+        ctx.arc(dogX + 16, dogY - 24, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(dogX - 16, dogY - 18);
+        ctx.lineTo(dogX - 26 + Math.sin(t * 16) * 5, dogY - 30);
+        ctx.stroke();
+        ctx.restore();
+
+        // Chão da quadra
+        ctx.fillStyle = '#9a3412';
+        ctx.fillRect(0, GROUND_Y - 10, w, h - GROUND_Y + 10);
+        ctx.fillStyle = '#fed7aa';
+        ctx.fillRect(80, GROUND_Y + 8, w - 160, 6);
+
+      } else if (activeBattleArena === 'feira') {
+        // 3. FEIRA LIVRE & PASTEL
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, '#1e3a8a');
+        sky.addColorStop(1, '#60a5fa');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Bandeirinhas balançando no topo (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.22, 0);
+        const flagCols = ['#ffdf00', '#16a34a', '#ef4444', '#ffffff', '#00f0ff'];
+        for (let fx = -60; fx < w + 60; fx += 38) {
+          const fy = 155 + Math.sin(fx * 0.015) * 18 + Math.sin(t * 4 + fx) * 3;
+          ctx.fillStyle = flagCols[Math.abs(Math.floor(fx / 38)) % flagCols.length];
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          ctx.lineTo(fx + 26, fy);
+          ctx.lineTo(fx + 13, fy + 22);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Barracas listradas + Caldo de Cana + Caixotes (parallax próximo)
+        ctx.save();
+        ctx.translate(-camX * 0.38, 0);
+        const colors = ['#ef4444', '#facc15', '#22c55e', '#3b82f6'];
+        const labels = ['PASTEL & CANA', ' caldo DE CANA', 'FRUTAS & COCO', 'PASTEL DE CARNE'];
+        for (let bx = -40; bx < w + 80; bx += 310) {
+          const idx = Math.abs(Math.floor((bx + 40) / 310));
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(bx + 20, 340, 12, 200);
+          ctx.fillRect(bx + 210, 340, 12, 200);
+
+          for (let s = 0; s < 6; s++) {
+            ctx.fillStyle = s % 2 === 0 ? colors[idx % colors.length] : '#ffffff';
+            ctx.fillRect(bx + s * 40, 310, 40, 42);
+          }
+
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(bx + 40, 365, 160, 34);
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(labels[idx % labels.length].toUpperCase(), bx + 120, 387);
+
+          // Caixotes de madeira empilhados
+          ctx.fillStyle = '#b45309';
+          ctx.fillRect(bx + 245, 495, 42, 42);
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bx + 245, 495, 42, 42);
+        }
+        ctx.restore();
+
+        // Asfalto da feira
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, GROUND_Y - 10, w, h - GROUND_Y + 10);
+        ctx.fillStyle = '#facc15';
+        for (let lx = 30; lx < w; lx += 110) {
+          ctx.fillRect(lx - camX * 0.5, GROUND_Y + 25, 60, 6);
+        }
+
+      } else if (activeBattleArena === 'laje') {
+        // 4. LAJE COM CHURRASCO & PÔR DO SOL
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.78);
+        sky.addColorStop(0, '#4c1d95');
+        sky.addColorStop(0.45, '#ea580c');
+        sky.addColorStop(1, '#facc15');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Sol gigante se pondo no horizonte
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(920 - camX * 0.08, 330, 74, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pipas coloridas rabiolando no céu
+        ctx.save();
+        ctx.translate(-camX * 0.16, 0);
+        [
+          { x: 280, y: 145, col: '#00f0ff' },
+          { x: 540, y: 110, col: '#ef4444' },
+          { x: 760, y: 170, col: '#4ade80' }
+        ].forEach((k, idx) => {
+          const kx = k.x + Math.sin(t * 2 + idx) * 28;
+          const ky = k.y + Math.cos(t * 2.6 + idx) * 14;
+          ctx.fillStyle = k.col;
+          ctx.beginPath();
+          ctx.moveTo(kx, ky - 20);
+          ctx.lineTo(kx + 16, ky);
+          ctx.lineTo(kx, ky + 24);
+          ctx.lineTo(kx - 16, ky);
+          ctx.closePath();
+          ctx.fill();
+          // Rabiola
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(kx, ky + 24);
+          ctx.quadraticCurveTo(kx - 14, ky + 45, kx + 8, ky + 68);
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        // Casinhas coloridas do morro ao fundo (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.28, 0);
+        const houseCols = ['#f97316', '#eab308', '#3b82f6', '#ec4899', '#22c55e'];
+        for (let hx = -40; hx < w + 80; hx += 85) {
+          const hh = 75 + (Math.abs(hx * 13) % 75);
+          ctx.fillStyle = houseCols[Math.abs(hx / 85) % houseCols.length];
+          ctx.fillRect(hx, 490 - hh, 76, hh);
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(hx + 16, 505 - hh, 14, 16);
+          ctx.fillRect(hx + 44, 505 - hh, 14, 16);
+        }
+        ctx.restore();
+
+        // Caixa d'água azul + Churrasqueira soltando fumaça animada (parallax próximo)
+        ctx.save();
+        ctx.translate(-camX * 0.42, 0);
+        // Caixa d'água azul clássica
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(150, 415);
+        ctx.lineTo(240, 415);
+        ctx.lineTo(230, 495);
+        ctx.lineTo(160, 495);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#0369a1';
+        ctx.fillRect(145, 405, 100, 12);
+
+        // Churrasqueira de tijolos
+        ctx.fillStyle = '#9a3412';
+        ctx.fillRect(1030, 445, 76, 95);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(1038, 455, 60, 22);
+        // Brasas e fumaça subindo
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(1042, 470, 52, 6);
+        for (let s = 0; s < 5; s++) {
+          const sy = 440 - ((t * 45 + s * 28) % 120);
+          const sx = 1068 + Math.sin(t * 3 + s) * 14;
+          ctx.fillStyle = 'rgba(241, 245, 249, 0.35)';
+          ctx.beginPath();
+          ctx.arc(sx, sy, 10 + s * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Mureta e piso de cimento da laje
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(0, 492, w, 46);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, GROUND_Y - 10, w, h - GROUND_Y + 10);
+
+      } else if (activeBattleArena === 'amazonia') {
+        // 5. ENCONTRO DAS ÁGUAS - AMAZÔNIA
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.65);
+        sky.addColorStop(0, '#0284c7');
+        sky.addColorStop(1, '#a7f3d0');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Araras vermelhas e azuis voando no céu (parallax lento)
+        ctx.save();
+        ctx.translate(-camX * 0.14, 0);
+        [
+          { bx: 360, by: 130, col: '#ef4444' },
+          { bx: 420, by: 155, col: '#2563eb' },
+          { bx: 880, by: 115, col: '#ef4444' }
+        ].forEach((bird, i) => {
+          const x = ((bird.bx + t * 55) % (w + 160)) - 80;
+          const y = bird.by + Math.sin(t * 4 + i) * 8;
+          const flap = Math.sin(t * 12 + i) * 10;
+          ctx.strokeStyle = bird.col;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x - 14, y - flap);
+          ctx.quadraticCurveTo(x - 5, y - 6, x, y);
+          ctx.quadraticCurveTo(x + 5, y - 6, x + 14, y - flap);
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        // Floresta Amazônica exuberante em duas camadas (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.24, 0);
+        ctx.fillStyle = '#064e3b';
+        for (let tx = -60; tx < w + 100; tx += 95) {
+          ctx.beginPath();
+          ctx.arc(tx, 340, 68, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#15803d';
+        for (let tx = -30; tx < w + 100; tx += 85) {
+          ctx.beginPath();
+          ctx.arc(tx, 385, 56, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Encontro das Águas: Rio Negro (esquerda) + Rio Solimões (direita)
+        const splitX = w * 0.52 - camX * 0.32;
+        ctx.fillStyle = '#0f172a'; // Rio Negro (escuro)
+        ctx.fillRect(0, 420, splitX, 120);
+        ctx.fillStyle = '#b45309'; // Rio Solimões (barrento)
+        ctx.fillRect(splitX, 420, w - splitX, 120);
+
+        // Espuma ondulada no encontro dos dois rios
+        ctx.strokeStyle = '#fde68a';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        for (let wy = 420; wy <= 535; wy += 12) {
+          const wx = splitX + Math.sin(t * 4 + wy * 0.08) * 14;
+          if (wy === 420) ctx.moveTo(wx, wy);
+          else ctx.lineTo(wx, wy);
+        }
+        ctx.stroke();
+
+        // Vitórias-régias flutuando na água
+        ctx.save();
+        ctx.translate(-camX * 0.4, 0);
+        [240, 460, 820, 1060].forEach((vx, idx) => {
+          const vy = 472 + Math.sin(t * 2 + idx) * 3;
+          ctx.fillStyle = '#22c55e';
+          ctx.beginPath();
+          ctx.ellipse(vx, vy, 34, 11, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#f472b6';
+          ctx.beginPath();
+          ctx.arc(vx + 6, vy - 4, 5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+
+        // Deck de madeira como piso de luta
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(0, GROUND_Y - 12, w, h - GROUND_Y + 12);
+        ctx.fillStyle = '#451a03';
+        for (let px = -40; px < w + 40; px += 48) {
+          ctx.fillRect(px - camX * 0.55, GROUND_Y - 12, 4, h - GROUND_Y + 12);
+        }
+
+      } else if (activeBattleArena === 'sertao') {
+        // 6. SERTÃO & FESTA JUNINA
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.78);
+        sky.addColorStop(0, '#050811');
+        sky.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Lua cheia e estrelas piscando (parallax lento)
+        ctx.fillStyle = '#fef9c3';
+        ctx.beginPath();
+        ctx.arc(220 - camX * 0.08, 110, 42, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        for (let st = 0; st < 28; st++) {
+          const sx = ((st * 173) % w) - camX * 0.06;
+          const sy = 40 + ((st * 67) % 210);
+          ctx.globalAlpha = 0.4 + Math.abs(Math.sin(t * 3 + st)) * 0.6;
+          ctx.fillRect(sx, sy, 3, 3);
+        }
+        ctx.globalAlpha = 1;
+
+        // Cactos Mandacaru e serra distante (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.25, 0);
+        ctx.fillStyle = '#311042';
+        ctx.beginPath();
+        ctx.moveTo(0, 535);
+        ctx.lineTo(350, 360);
+        ctx.lineTo(720, 450);
+        ctx.lineTo(1080, 340);
+        ctx.lineTo(1380, 535);
+        ctx.fill();
+
+        // Mandacarus
+        [180, 1080].forEach(cx => {
+          ctx.fillStyle = '#15803d';
+          ctx.beginPath();
+          ctx.roundRect(cx - 10, 380, 20, 155, 10);
+          ctx.roundRect(cx - 32, 420, 24, 14, 7);
+          ctx.roundRect(cx - 32, 395, 14, 38, 7);
+          ctx.roundRect(cx + 8, 435, 24, 14, 7);
+          ctx.roundRect(cx + 18, 405, 14, 42, 7);
+          ctx.fill();
+        });
+        ctx.restore();
+
+        // Bandeirinhas Juninas balançando (parallax próximo)
+        ctx.save();
+        ctx.translate(-camX * 0.35, 0);
+        const jCols = ['#ffdf00', '#ef4444', '#22c55e', '#3b82f6', '#f97316'];
+        for (let fx = -60; fx < w + 60; fx += 34) {
+          const fy = 185 + Math.sin(fx * 0.012) * 26 + Math.sin(t * 4 + fx) * 3;
+          ctx.fillStyle = jCols[Math.abs(Math.floor(fx / 34)) % jCols.length];
+          ctx.beginPath();
+          ctx.moveTo(fx, fy);
+          ctx.lineTo(fx + 24, fy);
+          ctx.lineTo(fx + 24, fy + 22);
+          ctx.lineTo(fx + 12, fy + 14);
+          ctx.lineTo(fx, fy + 22);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Fogueira de São João animada com faíscas
+        const bx = 640;
+        const by = 532;
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(bx - 36, by - 14, 72, 14);
+        ctx.fillRect(bx - 26, by - 24, 52, 12);
+
+        const flicker = Math.sin(t * 18) * 8;
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(bx - 32, by - 22);
+        ctx.quadraticCurveTo(bx - 10, by - 88 + flicker, bx, by - 105 - flicker);
+        ctx.quadraticCurveTo(bx + 10, by - 88 - flicker, bx + 32, by - 22);
+        ctx.fill();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.moveTo(bx - 16, by - 22);
+        ctx.quadraticCurveTo(bx, by - 68 - flicker, bx + 16, by - 22);
+        ctx.fill();
+
+        // Faíscas subindo
+        for (let sp = 0; sp < 8; sp++) {
+          const spy = by - 50 - ((t * 90 + sp * 32) % 160);
+          const spx = bx + Math.sin(t * 5 + sp * 2) * 26;
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(spx, spy, 4, 4);
+        }
+        ctx.restore();
+
+        // Terra batida rachada
+        ctx.fillStyle = '#9a3412';
+        ctx.fillRect(0, GROUND_Y - 10, w, h - GROUND_Y + 10);
+        ctx.strokeStyle = '#431407';
+        ctx.lineWidth = 2;
+        for (let cr = 60; cr < w; cr += 130) {
+          ctx.beginPath();
+          ctx.moveTo(cr - camX * 0.55, GROUND_Y + 6);
+          ctx.lineTo(cr + 22 - camX * 0.55, GROUND_Y + 24);
+          ctx.lineTo(cr + 8 - camX * 0.55, GROUND_Y + 42);
+          ctx.stroke();
+        }
+
+      } else if (activeBattleArena === 'paulista') {
+        // 7. AVENIDA PAULISTA À NOITE (MASP + PRÉDIOS + FARÓIS)
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.8);
+        sky.addColorStop(0, '#020617');
+        sky.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Arranha-céus iluminados e antenas neon (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.2, 0);
+        const towers = [
+          { x: 60, y: 140, w: 120, h: 395, neon: '#00f0ff' },
+          { x: 210, y: 190, w: 110, h: 345, neon: '#facc15' },
+          { x: 920, y: 120, w: 135, h: 415, neon: '#ef4444' },
+          { x: 1090, y: 175, w: 125, h: 360, neon: '#a855f7' }
+        ];
+        towers.forEach(tw => {
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(tw.x, tw.y, tw.w, tw.h);
+          ctx.strokeStyle = tw.neon;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(tw.x, tw.y, tw.w, 8);
+          // Antena piscando
+          ctx.beginPath();
+          ctx.moveTo(tw.x + tw.w / 2, tw.y);
+          ctx.lineTo(tw.x + tw.w / 2, tw.y - 36);
+          ctx.stroke();
+          ctx.fillStyle = tw.neon;
+          ctx.beginPath();
+          ctx.arc(tw.x + tw.w / 2, tw.y - 38, 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Janelas acesas
+          ctx.fillStyle = '#fef08a';
+          for (let wy = tw.y + 22; wy < 490; wy += 24) {
+            for (let wx = tw.x + 14; wx < tw.x + tw.w - 18; wx += 22) {
+              if ((wx + wy) % 3 !== 0) {
+                ctx.fillRect(wx, wy, 10, 12);
+              }
+            }
+          }
+        });
+        ctx.restore();
+
+        // O Icônico MASP com seus pilares e vãos vermelhos suspensos (parallax próximo)
+        ctx.save();
+        ctx.translate(-camX * 0.34, 0);
+        // Bloco suspenso de vidro escuro
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(380, 260, 480, 115);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(380, 260, 480, 115);
+        // Pilares e vigas vermelhas clássicas do MASP
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(365, 248, 510, 18); // Viga superior
+        ctx.fillRect(365, 372, 510, 18); // Viga inferior
+        ctx.fillRect(410, 248, 28, 285); // Pilar esquerdo
+        ctx.fillRect(802, 248, 28, 285); // Pilar direito
+        ctx.restore();
+
+        // Avenida com faróis de carros passando em alta velocidade
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 488, w, 48);
+        for (let c = 0; c < 6; c++) {
+          const carX = ((t * 340 + c * 230) % (w + 140)) - 70;
+          ctx.fillStyle = c % 2 === 0 ? '#fef08a' : '#ef4444';
+          ctx.fillRect(carX, 504 + (c % 2) * 14, 34, 5);
+        }
+
+        // Calçada da Paulista
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, GROUND_Y - 10, w, h - GROUND_Y + 10);
+
+      } else {
+        // 8. ESTÁDIO LOTADO - FINAL (MARACANÃ)
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+        sky.addColorStop(0, '#050811');
+        sky.addColorStop(1, '#1e3a8a');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Holofotes brilhantes no topo do estádio (parallax lento)
+        ctx.save();
+        ctx.translate(-camX * 0.14, 0);
+        [200, 640, 1080].forEach(lx => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(lx - 45, 70, 90, 18);
+          const spot = ctx.createLinearGradient(lx, 88, lx, 530);
+          spot.addColorStop(0, 'rgba(255, 255, 255, 0.24)');
+          spot.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = spot;
+          ctx.beginPath();
+          ctx.moveTo(lx - 40, 88);
+          ctx.lineTo(lx + 40, 88);
+          ctx.lineTo(lx + 210, 530);
+          ctx.lineTo(lx - 210, 530);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.restore();
+
+        // Arquibancadas pulsando em verde e amarelo com torcida animada (parallax médio)
+        ctx.save();
+        ctx.translate(-camX * 0.28, 0);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-80, 270, w + 160, 265);
+
+        const crowdCols = ['#16a34a', '#ffdf00', '#002776', '#ffffff'];
+        for (let row = 0; row < 6; row++) {
+          const ry = 290 + row * 38;
+          for (let cx = -60; cx < w + 80; cx += 24) {
+            const jump = Math.abs(Math.sin(t * 7 + cx * 0.1 + row)) * 6;
+            ctx.fillStyle = crowdCols[(Math.abs(Math.floor(cx / 24)) + row) % crowdCols.length];
+            ctx.beginPath();
+            ctx.arc(cx, ry - jump, 9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // Papel picado verde, amarelo e azul caindo na arena
+        const confCols = ['#22c55e', '#ffdf00', '#00f0ff', '#ffffff'];
+        for (let cf = 0; cf < 36; cf++) {
+          const cfx = ((cf * 97 + Math.sin(t * 2 + cf) * 35) % w + w) % w;
+          const cfy = ((t * 85 + cf * 47) % (GROUND_Y - 40));
+          ctx.fillStyle = confCols[cf % confCols.length];
+          ctx.fillRect(cfx, cfy, 7, 5);
+        }
+
+        // Gramado verde com faixas e linhas brancas do campo
+        ctx.fillStyle = '#15803d';
+        ctx.fillRect(0, GROUND_Y - 12, w, h - GROUND_Y + 12);
+        ctx.fillStyle = '#16a34a';
+        for (let gx = -80; gx < w + 80; gx += 160) {
+          ctx.fillRect(gx - camX * 0.55, GROUND_Y - 12, 80, h - GROUND_Y + 12);
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(60, GROUND_Y + 14, w - 120, 5);
+        ctx.fillRect(w * 0.5 - camX * 0.55, GROUND_Y - 12, 6, h - GROUND_Y + 12);
+      }
+    }
+
+    function drawFighter(ctx, f) {
+      ctx.save();
+      ctx.translate(f.x, f.y);
+
+      // Aura dourada/vermelha especial se for o Chefão Final da Torre
+      if (f.isBoss) {
+        ctx.save();
+        ctx.strokeStyle = '#ffdf00';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.45 + Math.sin(f.animTick * 0.15) * 0.2;
+        ctx.beginPath();
+        ctx.ellipse(0, -78, 52, 88, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Sombra no chão
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+      ctx.beginPath();
+      ctx.ellipse(0, 4, 42, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (f.hurtTimer > 0 && f.hurtTimer % 3 === 0) {
+        ctx.filter = 'brightness(2.2) sepia(1) hue-rotate(-50deg)';
+      }
+
+      ctx.scale(f.facing, 1);
+
+      const breathe = Math.sin(f.animTick * 0.12) * 3;
+      const walkSwing = Math.abs(f.vx) > 0.6 ? Math.sin(f.animTick * 0.3) * 14 : 0;
+
+      // Pernas
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = f.data.secondaryColor;
+
+      ctx.beginPath();
+      ctx.moveTo(-10, -56);
+      ctx.lineTo(-14 - walkSwing, -8);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(10, -56);
+      if (f.attackState === 'kick') {
+        ctx.lineTo(76, -68);
+      } else {
+        ctx.lineTo(14 + walkSwing, -8);
+      }
+      ctx.stroke();
+
+      // Tronco
+      ctx.fillStyle = f.data.primaryColor;
+      if (f.data.id === 'dollynho') {
+        ctx.beginPath();
+        ctx.roundRect(-26, -112 + breathe, 52, 62, 22);
+        ctx.fill();
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-22, -85 + breathe, 44, 14);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-24, -112 + breathe, 48, 60, 12);
+        ctx.fill();
+      }
+
+      if (f.data.id === 'luva' || f.data.id === 'borabill') {
+        ctx.fillStyle = '#ffdf00';
+        ctx.fillRect(-16, -98 + breathe, 32, 10);
+      }
+
+      // Cabeça
+      const skinColor =
+        f.data.id === 'caramelo' ? '#ea580c' :
+        f.data.id === 'etbilu'   ? '#94a3b8' :
+        f.data.id === 'dollynho' ? '#84cc16' :
+        f.data.id === 'luva'     ? '#8d5524' :
+        f.data.id === 'caneta' || f.data.id === 'galo' || f.data.id === 'borabill' ? '#c68642' :
+        '#f1c27d';
+
+      ctx.fillStyle = skinColor;
+      ctx.beginPath();
+      if (f.data.id === 'etbilu') {
+        ctx.ellipse(0, -134 + breathe, 24, 28, 0, 0, Math.PI * 2);
+      } else {
+        ctx.arc(0, -132 + breathe, 23, 0, Math.PI * 2);
+      }
+      ctx.fill();
+
+      // Acessórios exclusivos
+      if (f.data.id === 'ednaldo' || f.data.id === 'borabill') {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(-4, -138 + breathe, 26, 9);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(14, -136 + breathe, 5, 3);
+      } else if (f.data.id === 'etbilu') {
+        ctx.fillStyle = '#090d16';
+        ctx.beginPath();
+        ctx.ellipse(11, -133 + breathe, 7, 10, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#00f0ff';
+        ctx.beginPath();
+        ctx.arc(4, -151 + breathe, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (f.data.id === 'caramelo') {
+        ctx.fillStyle = '#9a3412';
+        ctx.beginPath();
+        ctx.ellipse(-14, -138 + breathe, 8, 16, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#090d16';
+        ctx.beginPath();
+        ctx.arc(22, -130 + breathe, 5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(10, -135 + breathe, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#090d16';
+        ctx.beginPath();
+        ctx.arc(12, -135 + breathe, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (f.data.id === 'dollynho') {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-12, -158 + breathe, 24, 8);
+      }
+
+      // Coroa de Chefão na cabeça se for Boss da Torre
+      if (f.isBoss) {
+        ctx.fillStyle = '#ffdf00';
+        ctx.beginPath();
+        ctx.moveTo(-14, -154 + breathe);
+        ctx.lineTo(-10, -168 + breathe);
+        ctx.lineTo(0, -158 + breathe);
+        ctx.lineTo(10, -168 + breathe);
+        ctx.lineTo(14, -154 + breathe);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Braço da frente
+      ctx.strokeStyle = f.data.id === 'luva' ? '#090d16' : skinColor;
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.moveTo(8, -100 + breathe);
+      if (f.attackState === 'punch') {
+        ctx.lineTo(74, -104 + breathe);
+      } else if (f.attackState === 'special') {
+        ctx.lineTo(62, -92 + breathe);
+      } else if (f.isBlocking) {
+        ctx.lineTo(24, -118 + breathe);
+      } else {
+        ctx.lineTo(26 - walkSwing * 0.5, -78 + breathe);
+      }
+      ctx.stroke();
+
+      if (f.data.id === 'caneta') {
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(20, -108 + breathe, 34, 6);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(54, -107 + breathe, 6, 4);
+      }
+
+      // Escudo Visual (3/3 Ciano, 2/3 Amarelo com rachadura, 1/3 Vermelho pulsante)
+      if (f.isBlocking && f.shieldBreakTimer <= 0 && f.shieldHp > 0) {
+        const shieldColor =
+          f.shieldHp === 3 ? '#00f0ff' :
+          f.shieldHp === 2 ? '#facc15' :
+          '#ef4444';
+
+        const pulseAlpha = f.shieldHp === 1
+          ? 0.25 + Math.abs(Math.sin(f.animTick * 0.25)) * 0.35
+          : 0.26;
+
+        ctx.save();
+        ctx.strokeStyle = shieldColor;
+        ctx.fillStyle = shieldColor;
+        ctx.lineWidth = 4;
+
+        ctx.globalAlpha = pulseAlpha;
+        ctx.beginPath();
+        ctx.ellipse(6, -82, 56, 86, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 0.92;
+        ctx.beginPath();
+        ctx.ellipse(6, -82, 56, 86, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (f.shieldHp <= 2) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(28, -135);
+          ctx.lineTo(14, -110);
+          ctx.lineTo(26, -90);
+          ctx.lineTo(10, -68);
+          ctx.stroke();
+        }
+        if (f.shieldHp === 1) {
+          ctx.beginPath();
+          ctx.moveTo(-22, -120);
+          ctx.lineTo(-6, -95);
+          ctx.lineTo(-18, -72);
+          ctx.lineTo(-2, -45);
+          ctx.moveTo(14, -110);
+          ctx.lineTo(42, -98);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      if (f.stunTimer > 0) {
+        ctx.fillStyle = '#ffdf00';
+        for (let s = 0; s < 3; s++) {
+          const ang = f.animTick * 0.2 + (s * Math.PI * 2) / 3;
+          ctx.beginPath();
+          ctx.arc(Math.cos(ang) * 24, -168 + Math.sin(ang) * 7, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawProjectiles(ctx) {
+      projectiles.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffdf00';
+        ctx.font = '900 15px Impact, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.phrase, 0, -p.radius - 10);
+
+        ctx.restore();
+      });
+    }
+
+    /* ========================================================================
+       8. CONTROLES DE TECLADO, TOUCH E INTELIGÊNCIA ARTIFICIAL POR DIFICULDADE
+       ======================================================================== */
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+      keysDown[e.code] = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keysDown[e.code] = false;
+    });
+
+    window.addEventListener('blur', () => {
+      for (const k in keysDown) keysDown[k] = false;
+    });
+
+    // Sistema Multitoque Real: permite andar com o polegar esquerdo e atacar com o direito simultaneamente
+    const activeTouchMap = new Map(); // touch.identifier -> keyCode
+    const activeMouseKeys = new Set();
+
+    function syncTouchKeysState() {
+      // Limpa todas as teclas virtuais vinculadas aos botões touch
+      document.querySelectorAll('#touch-controls .touch-btn[data-key]').forEach(btn => {
+        const k = btn.dataset.key;
+        keysDown[k] = false;
+        btn.classList.remove('pressed');
+      });
+
+      // Reaplica apenas as teclas que ainda estão pressionadas por algum dedo ou mouse
+      const pressedKeys = new Set([...activeTouchMap.values(), ...activeMouseKeys]);
+      pressedKeys.forEach(k => {
+        keysDown[k] = true;
+        document.querySelectorAll(`#touch-controls .touch-btn[data-key="${k}"]`).forEach(btn => {
+          btn.classList.add('pressed');
+        });
+      });
+    }
+
+    function setupTouchButtons() {
+      const container = document.getElementById('touch-controls');
+      if (!container) return;
+
+      container.addEventListener('touchstart', (e) => {
+        const btn = e.target.closest('.touch-btn[data-key]');
+        if (!btn) return;
+        e.preventDefault();
+        SoundFX.init();
+
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          const targetBtn = document.elementFromPoint(t.clientX, t.clientY)?.closest('.touch-btn[data-key]');
+          if (targetBtn) {
+            activeTouchMap.set(t.identifier, targetBtn.dataset.key);
+          }
+        }
+        syncTouchKeysState();
+      }, { passive: false });
+
+      // Permite deslizar o dedo entre ←, ↑, → e 🛡️ sem precisar tirar o polegar da tela
+      container.addEventListener('touchmove', (e) => {
+        if (activeTouchMap.size === 0) return;
+        e.preventDefault();
+
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          if (!activeTouchMap.has(t.identifier)) continue;
+          const elUnderFinger = document.elementFromPoint(t.clientX, t.clientY)?.closest('.touch-btn[data-key]');
+          if (elUnderFinger) {
+            activeTouchMap.set(t.identifier, elUnderFinger.dataset.key);
+          } else {
+            activeTouchMap.delete(t.identifier);
+          }
+        }
+        syncTouchKeysState();
+      }, { passive: false });
+
+      const handleTouchEnd = (e) => {
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          activeTouchMap.delete(e.changedTouches[i].identifier);
+        }
+        syncTouchKeysState();
+      };
+
+      container.addEventListener('touchend', handleTouchEnd, { passive: false });
+      container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+      // Suporte a clique com mouse caso testem o modo celular no navegador do PC
+      document.querySelectorAll('#touch-controls .touch-btn[data-key]').forEach(btn => {
+        const keyCode = btn.dataset.key;
+        btn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          SoundFX.init();
+          activeMouseKeys.add(keyCode);
+          syncTouchKeysState();
+        });
+        btn.addEventListener('mouseup', () => {
+          activeMouseKeys.delete(keyCode);
+          syncTouchKeysState();
+        });
+        btn.addEventListener('mouseleave', () => {
+          activeMouseKeys.delete(keyCode);
+          syncTouchKeysState();
+        });
+      });
+    }
+
+    function toggleTouchControls() {
+      const tc = document.getElementById('touch-controls');
+      if (platformMode === 'pc') {
+        tc.classList.toggle('force-visible');
+        tc.classList.toggle('dual-p2', tc.classList.contains('force-visible') && gameMode === '2P');
+      } else {
+        document.body.classList.toggle('mobile-mode');
+        document.body.classList.toggle('pc-mode');
+      }
+    }
+
+    // Alterna entre controles lado a lado ou frente a frente (para jogar na mesa)
+    function toggleTabletopMode() {
+      SoundFX.click();
+      const tc = document.getElementById('touch-controls');
+      const btn = document.getElementById('btn-tabletop-toggle');
+      if (!tc || !btn) return;
+      const isTabletop = tc.classList.toggle('tabletop-mode');
+      btn.textContent = isTabletop ? '👥 LADO A LADO' : '🔄 MODO MESA';
+    }
+
+    function getP1Input() {
+      return {
+        left: !!keysDown['KeyA'],
+        right: !!keysDown['KeyD'],
+        up: !!keysDown['KeyW'],
+        block: !!keysDown['KeyS'],
+        punch: !!keysDown['KeyQ'],
+        kick: !!keysDown['KeyE'],
+        special: !!keysDown['KeyR']
+      };
+    }
+
+    function getP2Input() {
+      return {
+        left: !!keysDown['ArrowLeft'],
+        right: !!keysDown['ArrowRight'],
+        up: !!keysDown['ArrowUp'],
+        block: !!keysDown['ArrowDown'],
+        punch: !!keysDown['KeyJ'],
+        kick: !!keysDown['KeyK'],
+        special: !!keysDown['KeyL']
+      };
+    }
+
+    // Inteligência Artificial adaptativa baseada nos 4 níveis de CPU_DIFFICULTIES
+    function getCPUInput(cpu, target) {
+      const cfg = CPU_DIFFICULTIES[cpuDifficulty] || CPU_DIFFICULTIES.normal;
+
+      cpu.aiReactionCounter++;
+      if (cpu.aiReactionCounter < cfg.reactionDelay) {
+        return cpu.aiCachedInput;
+      }
+      cpu.aiReactionCounter = 0;
+
+      const inp = {
+        left: false,
+        right: false,
+        up: false,
+        block: false,
+        punch: false,
+        kick: false,
+        special: false
+      };
+
+      const dx = target.x - cpu.x;
+      const dist = Math.abs(dx);
+      const dirToTarget = dx >= 0 ? 1 : -1;
+
+      // 1. Reage a projéteis vindo na direção da CPU
+      const incomingProj = projectiles.find(p =>
+        p.owner !== cpu &&
+        Math.abs(p.x - cpu.x) < 230 &&
+        Math.sign(p.vx) === -dirToTarget
+      );
+
+      if (incomingProj) {
+        if (cpu.isGrounded && Math.random() < cfg.blockChance * 0.65) {
+          inp.up = true;
+        } else if (cpu.shieldBreakTimer <= 0 && cpu.shieldHp > 0 && Math.random() < cfg.blockChance) {
+          inp.block = true;
+        }
+        cpu.aiCachedInput = inp;
+        return inp;
+      }
+
+      // 2. Se estiver sem fôlego ou com escudo quebrado, recua para recuperar
+      if (cpu.exhausted || cpu.stamina < 24 || cpu.shieldBreakTimer > 0) {
+        if (dist < 280) {
+          if (dirToTarget > 0) inp.left = true;
+          else inp.right = true;
+        }
+        cpu.aiCachedInput = inp;
+        return inp;
+      }
+
+      // 3. Se o jogador estiver atacando perto, tenta defender ou encaixar Perfect Parry
+      if (target.attackState && dist < 135 && cpu.shieldBreakTimer <= 0 && cpu.shieldHp > 0) {
+        if (Math.random() < cfg.blockChance || Math.random() < cfg.parryChance) {
+          inp.block = true;
+          cpu.aiCachedInput = inp;
+          return inp;
+        }
+      }
+
+      // 4. Usa o Golpe Especial assim que a barra atingir 100%
+      if (cpu.superCharge >= cpu.maxSuper && dist < 560 && Math.random() < cfg.aggression * 3.5) {
+        inp.special = true;
+        cpu.aiCachedInput = inp;
+        return inp;
+      }
+
+      // 5. Movimentação tática até o alcance ideal de golpe
+      const idealRange = 94;
+      if (dist > idealRange) {
+        if (dirToTarget > 0) inp.right = true;
+        else inp.left = true;
+
+        if (dist > 340 && cpu.isGrounded && Math.random() < 0.08) {
+          inp.up = true;
+        }
+      } else {
+        // 6. Em alcance corpo a corpo: pune jogador exausto/atordoado ou alterna combos
+        const targetVulnerable = target.exhausted || target.stunTimer > 0 || target.shieldBreakTimer > 0;
+        const attackTrigger = targetVulnerable ? Math.min(0.95, cfg.aggression * 5) : cfg.aggression * 3.2;
+
+        if (Math.random() < attackTrigger) {
+          if (Math.random() < cfg.smartComboChance) {
+            // Alterna entre Soco e Chute para evitar a penalidade Anti-Spam
+            if (cpu.lastMoveType === 'punch' && cpu.stamina >= 20) {
+              inp.kick = true;
+            } else {
+              inp.punch = true;
+            }
+          } else {
+            if (Math.random() < 0.5 && cpu.stamina >= 20) inp.kick = true;
+            else inp.punch = true;
+          }
+        } else if (Math.random() < 0.18) {
+          // Pequeno recuo para espaçamento
+          if (dirToTarget > 0) inp.left = true;
+          else inp.right = true;
+        }
+      }
+
+      cpu.aiCachedInput = inp;
+      return inp;
+    }
+
+    /* ========================================================================
+       9. GERENCIAMENTO DA PARTIDA, ROUNDS, HUD E LOOP PRINCIPAL (60 FPS)
+       ======================================================================== */
+    function startMatch() {
+      SoundFX.init();
+      document.getElementById('gameover-modal').classList.remove('active');
+
+      roundNumber = 1;
+      p1RoundsWon = 0;
+      p2RoundsWon = 0;
+
+      // Resolve o mapa selecionado (sorteia 1 dos 8 se estiver em 'aleatorio')
+      if (selectedArena === 'aleatorio') {
+        const randIdx = Math.floor(Math.random() * PLAYABLE_ARENA_KEYS.length);
+        activeBattleArena = PLAYABLE_ARENA_KEYS[randIdx];
+      } else {
+        activeBattleArena = selectedArena;
+      }
+
+      const f1Data = FIGHTERS_DATA[selectedP1];
+      const f2Data = FIGHTERS_DATA[selectedP2];
+
+      // Configura nomes, retratos e selos na HUD
+      document.getElementById('hud-p1-name').textContent = f1Data.name.toUpperCase();
+      document.getElementById('hud-p2-name').textContent = f2Data.name.toUpperCase();
+      drawPixelPortraitToCanvas(f1Data.id, document.getElementById('hud-p1-portrait'));
+      drawPixelPortraitToCanvas(f2Data.id, document.getElementById('hud-p2-portrait'));
+
+      const cpuBadge = document.getElementById('hud-cpu-badge');
+      const bossBadge = document.getElementById('hud-boss-badge');
+      if (gameMode === '2P') {
+        cpuBadge.textContent = 'JOGADOR 2';
+        bossBadge.style.display = 'none';
+      } else {
+        cpuBadge.textContent = `CPU: ${CPU_DIFFICULTIES[cpuDifficulty].label}`;
+        bossBadge.style.display = isCurrentBattleBoss ? 'inline-block' : 'none';
+      }
+
+      // Ativa layout duplo no touch caso estejam jogando 2P na versão Celular
+      const tc = document.getElementById('touch-controls');
+      if (tc) {
+        tc.classList.toggle('dual-p2', platformMode === 'mobile' && gameMode === '2P');
+        tc.classList.remove('tabletop-mode');
+        const ttBtn = document.getElementById('btn-tabletop-toggle');
+        if (ttBtn) ttBtn.textContent = '🔄 MODO MESA';
+      }
+
+      updateRoundDots();
+      showScreen('battle-screen');
+      startRound();
+    }
+
+    function startRound() {
+      const f1Data = FIGHTERS_DATA[selectedP1];
+      const f2Data = FIGHTERS_DATA[selectedP2];
+
+      fighter1 = new Fighter(1, f1Data, 320, 1, false);
+      fighter2 = new Fighter(2, f2Data, 960, -1, isCurrentBattleBoss);
+
+      projectiles = [];
+      particles = [];
+      floatingTexts = [];
+      screenShake = 0;
+      hitstopFrames = 0;
+
+      roundTimer = selectedRoundTime === null ? '∞' : selectedRoundTime;
+      roundTimerFrames = 0;
+      roundState = 'INTRO';
+      stateTimer = 85; // ~1.4s de anúncio antes de liberar o combate
+
+      const roundLabel = gameMode === 'TOWER'
+        ? `DEGRAU ${towerState.currentStep + 1}/5 • R${roundNumber}`
+        : `ROUND ${roundNumber}`;
+      document.getElementById('hud-round-label').textContent = roundLabel;
+
+      const timerEl = document.getElementById('hud-timer');
+      timerEl.textContent = roundTimer;
+      timerEl.classList.remove('timer-warning');
+
+      SoundFX.roundStart();
+      const arenaTitle = ARENAS_INFO[activeBattleArena]?.name || '';
+      const bannerText = roundNumber === 1
+        ? `ROUND 1\n📍 ${arenaTitle.toUpperCase()}`
+        : `ROUND ${roundNumber}\nLUTEM!`;
+      showRoundBanner(bannerText, 1300);
+
+      updateHUD();
+    }
+
+    function updateRoundDots() {
+      document.getElementById('p1-dot-1').classList.toggle('won', p1RoundsWon >= 1);
+      document.getElementById('p1-dot-2').classList.toggle('won', p1RoundsWon >= 2);
+      document.getElementById('p2-dot-1').classList.toggle('won', p2RoundsWon >= 1);
+      document.getElementById('p2-dot-2').classList.toggle('won', p2RoundsWon >= 2);
+    }
+
+    let bannerTimeout = null;
+    function showRoundBanner(text, durationMs = 1200) {
+      const banner = document.getElementById('round-banner');
+      if (!banner) return;
+      banner.textContent = text;
+      banner.classList.add('visible');
+      if (bannerTimeout) clearTimeout(bannerTimeout);
+      bannerTimeout = setTimeout(() => {
+        banner.classList.remove('visible');
+      }, durationMs);
+    }
+
+    function updateHUD() {
+      if (!fighter1 || !fighter2) return;
+
+      [fighter1, fighter2].forEach((f, index) => {
+        const p = index + 1;
+        const hpPct = Math.max(0, (f.hp / f.maxHp) * 100);
+        const ghostPct = Math.max(0, (f.ghostHp / f.maxHp) * 100);
+
+        const hpOuter = document.getElementById(`p${p}-hp-outer`);
+        const hpFill = document.getElementById(`p${p}-hp-fill`);
+        const hpGhost = document.getElementById(`p${p}-hp-ghost`);
+        const hpText = document.getElementById(`p${p}-hp-text`);
+
+        if (hpFill) hpFill.style.width = hpPct + '%';
+        if (hpGhost) hpGhost.style.width = ghostPct + '%';
+        if (hpText) hpText.textContent = `${Math.ceil(f.hp)} / ${f.maxHp}`;
+        if (hpOuter) hpOuter.classList.toggle('low-hp', hpPct <= 25);
+
+        // Barra de Super
+        const supPct = Math.floor((f.superCharge / f.maxSuper) * 100);
+        const supFill = document.getElementById(`p${p}-super-fill`);
+        const supText = document.getElementById(`p${p}-super-text`);
+        if (supFill) {
+          supFill.style.width = supPct + '%';
+          supFill.classList.toggle('ready', supPct >= 100);
+        }
+        if (supText) supText.textContent = supPct >= 100 ? 'PRONTO!' : `${supPct}%`;
+
+        // Destaca o botão touch de Super quando chegar a 100%
+        if (p === 1) {
+          ['touch-btn-special', 'touch-btn-special-p1'].forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) btn.classList.toggle('super-ready', supPct >= 100);
+          });
+        } else if (p === 2) {
+          const btnP2 = document.getElementById('touch-btn-special-p2');
+          if (btnP2) btnP2.classList.toggle('super-ready', supPct >= 100);
+        }
+
+        // Barra de Fôlego (Stamina)
+        const stamPct = Math.floor((f.stamina / f.maxStamina) * 100);
+        const stamFill = document.getElementById(`p${p}-stam-fill`);
+        const stamText = document.getElementById(`p${p}-stam-text`);
+        const stamLabel = document.getElementById(`p${p}-stam-label`);
+        if (stamFill) {
+          stamFill.style.width = stamPct + '%';
+          stamFill.classList.toggle('exhausted', f.exhausted);
+        }
+        if (stamText) stamText.textContent = `${stamPct}%`;
+        if (stamLabel) {
+          stamLabel.textContent = f.exhausted ? 'EXAUSTO!' : 'FÔLEGO';
+          stamLabel.style.color = f.exhausted ? '#ef4444' : '#cbd5e1';
+        }
+
+        // 3 Blocos do Escudo + Barra de Regeneração Passiva
+        for (let slot = 1; slot <= 3; slot++) {
+          const pip = document.getElementById(`p${p}-shield-${slot}`);
+          if (!pip) continue;
+          pip.className = 'shield-pip';
+          if (f.shieldBreakTimer <= 0 && f.shieldHp >= slot) {
+            pip.classList.add(`hp-${f.shieldHp}`);
+          }
+        }
+
+        const regenFill = document.getElementById(`p${p}-shield-regen-fill`);
+        const shieldStatus = document.getElementById(`p${p}-shield-status`);
+        if (regenFill && shieldStatus) {
+          regenFill.className = 'shield-regen-fill';
+          if (f.shieldBreakTimer > 0) {
+            const pctBroken = Math.max(0, 100 - (f.shieldBreakTimer / 210) * 100);
+            regenFill.style.width = pctBroken + '%';
+            regenFill.classList.add('broken');
+            shieldStatus.textContent = `QUEBRADO ${(f.shieldBreakTimer / 60).toFixed(1)}s`;
+            shieldStatus.style.color = '#ef4444';
+          } else if (f.shieldHp < f.maxShieldHp) {
+            const regenPct = f.shieldRegenDelay > 0
+              ? 0
+              : Math.min(100, (f.shieldRegenProgress / 150) * 100);
+            regenFill.style.width = regenPct + '%';
+            regenFill.classList.add('regenerating');
+            shieldStatus.textContent = f.shieldRegenDelay > 0
+              ? `ESCUDO ${f.shieldHp}/3`
+              : `REGEN ${f.shieldHp}/3`;
+            shieldStatus.style.color = f.shieldHp === 2 ? '#facc15' : '#ef4444';
+          } else {
+            regenFill.style.width = '100%';
+            shieldStatus.textContent = 'ESCUDO 3/3';
+            shieldStatus.style.color = '#38bdf8';
+          }
+        }
+      });
+    }
+
+    function handleRoundEnd() {
+      roundState = 'ROUND_OVER';
+      stateTimer = 110;
+
+      let roundWinner = null;
+      if (fighter1.hp > fighter2.hp) {
+        p1RoundsWon++;
+        roundWinner = fighter1;
+      } else if (fighter2.hp > fighter1.hp) {
+        p2RoundsWon++;
+        roundWinner = fighter2;
+      } else {
+        // Empate no tempo: ambos ganham 1 ponto se ninguém tiver 1, ou desempata
+        p1RoundsWon++;
+        roundWinner = fighter1;
+      }
+
+      updateRoundDots();
+      SoundFX.victory();
+
+      const koType = (fighter1.hp <= 0 || fighter2.hp <= 0) ? 'K.O.!!' : 'TEMPO ESGOTADO!';
+      showRoundBanner(`${koType}\n${roundWinner.data.name.toUpperCase()} VENCEU O ROUND!`, 1600);
+    }
+
+    function proceedAfterRoundOver() {
+      // Melhor de 3: primeiro a vencer 2 rounds ganha a luta
+      if (p1RoundsWon >= 2 || p2RoundsWon >= 2) {
+        const playerWonMatch = p1RoundsWon >= 2;
+        const matchWinner = playerWonMatch ? fighter1 : fighter2;
+
+        if (gameMode === 'TOWER' && towerState.active) {
+          if (playerWonMatch) {
+            // Avança para o próximo degrau ou coroa o Campeão da Torre!
+            if (towerState.currentStep < towerState.steps.length - 1) {
+              towerState.currentStep++;
+              renderTowerScreen();
+              showScreen('screen-tower');
+            } else {
+              SoundFX.towerChampion();
+              showGameOverModal(fighter1, true);
+            }
+          } else {
+            // Jogador perdeu na Torre: oferece Continue ou Abandonar
+            showGameOverModal(fighter2, false);
+          }
+        } else {
+          showGameOverModal(matchWinner, false);
+        }
+      } else {
+        roundNumber++;
+        startRound();
+      }
+    }
+
+    function showGameOverModal(winnerFighter, isTowerChampion = false) {
+      const modal = document.getElementById('gameover-modal');
+      const topTitle = document.getElementById('modal-subtitle-top');
+      const winnerName = document.getElementById('modal-winner-name');
+      const portrait = document.getElementById('modal-winner-portrait');
+      const summary = document.getElementById('modal-summary');
+      const endingBox = document.getElementById('modal-ending-box');
+      const btnContainer = document.getElementById('modal-buttons');
+
+      drawPixelPortraitToCanvas(winnerFighter.data.id, portrait);
+      endingBox.classList.remove('visible');
+      btnContainer.innerHTML = '';
+
+      if (gameMode === 'TOWER' && towerState.active) {
+        if (isTowerChampion) {
+          topTitle.textContent = '👑 CAMPEÃO SUPREMO DA TORRE! 👑';
+          winnerName.textContent = `${winnerFighter.data.name.toUpperCase()} ZEROU A TORRE!`;
+          summary.textContent = `Dificuldade: ${CPU_DIFFICULTIES[cpuDifficulty].label} • Continues usados: ${towerState.continuesUsed}`;
+          endingBox.textContent = winnerFighter.data.storyEnding;
+          endingBox.classList.add('visible');
+
+          btnContainer.innerHTML = `
+            <button class="btn-arcade btn-roxo" onclick="initTowerMode(selectedP1)">🏰 JOGAR TORRE NOVAMENTE</button>
+            <button class="btn-arcade btn-azul" onclick="document.getElementById('gameover-modal').classList.remove('active'); goToSelect('TOWER')">🎭 ESCOLHER OUTRO HERÓI</button>
+            <button class="btn-arcade btn-secundario" onclick="exitToMenu()">🏠 MENU INICIAL</button>
+          `;
+          launchFireworksShow(5500);
+        } else {
+          topTitle.textContent = '💀 DERROTADO NA TORRE 💀';
+          winnerName.textContent = `${winnerFighter.data.name.toUpperCase()} VENCEU!`;
+          summary.textContent = `Você caiu no Degrau ${towerState.currentStep + 1} de 5 (${p1RoundsWon} x ${p2RoundsWon})`;
+
+          btnContainer.innerHTML = `
+            <button class="btn-arcade btn-verde" onclick="continueTowerStep()">🪙 CONTINUE (TENTAR DEGRAU NOVAMENTE)</button>
+            <button class="btn-arcade btn-roxo" onclick="document.getElementById('gameover-modal').classList.remove('active'); goToSelect('TOWER')">🔄 REINICIAR TORRE</button>
+            <button class="btn-arcade btn-secundario" onclick="exitToMenu()">🏠 MENU INICIAL</button>
+          `;
+        }
+      } else {
+        topTitle.textContent = '🏆 FIM DA PARTIDA 🏆';
+        winnerName.textContent = `${winnerFighter.data.name.toUpperCase()} VENCEU!`;
+        summary.textContent = `Placar Final: ${p1RoundsWon} x ${p2RoundsWon} • Arena: ${ARENAS_INFO[activeBattleArena].name}`;
+
+        btnContainer.innerHTML = `
+          <button class="btn-arcade btn-verde" onclick="startMatch()">🔄 JOGAR NOVAMENTE</button>
+          <button class="btn-arcade btn-azul" onclick="document.getElementById('gameover-modal').classList.remove('active'); goToSelect(gameMode)">🎭 TROCAR PERSONAGENS</button>
+          <button class="btn-arcade btn-secundario" onclick="exitToMenu()">🏠 MENU INICIAL</button>
+        `;
+        launchFireworksShow(4000);
+      }
+
+      modal.classList.add('active');
+    }
+
+    function continueTowerStep() {
+      SoundFX.click();
+      towerState.continuesUsed++;
+      document.getElementById('gameover-modal').classList.remove('active');
+      startTowerBattle();
+    }
+
+    function exitToMenu() {
+      SoundFX.click();
+      roundState = 'IDLE';
+      towerState.active = false;
+      isCurrentBattleBoss = false;
+      document.getElementById('gameover-modal').classList.remove('active');
+      showScreen('start-screen');
+    }
+
+    // Animação dos bonecos nos dois painéis laterais da Tela de Seleção
+    let previewAnimTick = 0;
+    function renderSelectPreviews() {
+      if (currentScreen !== 'select-screen') return;
+      previewAnimTick++;
+
+      const configs = [
+        { canvasId: 'p1-preview-canvas', fighter: FIGHTERS_DATA[selectedP1], facing: 1 },
+        { canvasId: 'p2-preview-canvas', fighter: FIGHTERS_DATA[selectedP2], facing: -1 }
+      ];
+
+      configs.forEach(cfg => {
+        const cvs = document.getElementById(cfg.canvasId);
+        if (!cvs || !cfg.fighter) return;
+        const pctx = cvs.getContext('2d');
+        pctx.clearRect(0, 0, cvs.width, cvs.height);
+
+        const dummy = {
+          data: cfg.fighter,
+          x: cvs.width / 2,
+          y: cvs.height - 10,
+          vx: 0,
+          facing: cfg.facing,
+          animTick: previewAnimTick,
+          hurtTimer: 0,
+          stunTimer: 0,
+          attackState: null,
+          isBlocking: false,
+          shieldBreakTimer: 0,
+          shieldHp: 3,
+          isBoss: false
+        };
+
+        pctx.save();
+        pctx.translate(dummy.x, dummy.y);
+        pctx.scale(0.68, 0.68);
+        pctx.translate(-dummy.x, -dummy.y);
+        drawFighter(pctx, dummy);
+        pctx.restore();
+      });
+    }
+
+    // Loop Principal do Jogo (60 FPS)
+    function gameLoop() {
+      requestAnimationFrame(gameLoop);
+
+      if (currentScreen === 'select-screen') {
+        renderSelectPreviews();
+        return;
+      }
+
+      if (currentScreen !== 'battle-screen' || !fighter1 || !fighter2) return;
+
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Hitstop (congelamento dramático de impacto em golpes fortes)
+      if (hitstopFrames > 0) {
+        hitstopFrames--;
+      } else {
+        if (roundState === 'INTRO') {
+          stateTimer--;
+          if (stateTimer <= 0) {
+            roundState = 'FIGHTING';
+          }
+        } else if (roundState === 'FIGHTING') {
+          // Atualiza relógio do round (se não for Infinito)
+          if (selectedRoundTime !== null) {
+            roundTimerFrames++;
+            if (roundTimerFrames >= 60) {
+              roundTimerFrames = 0;
+              roundTimer--;
+              const timerEl = document.getElementById('hud-timer');
+              timerEl.textContent = Math.max(0, roundTimer);
+              if (roundTimer <= 10 && roundTimer > 0) {
+                timerEl.classList.add('timer-warning');
+                SoundFX.tick();
+              }
+              if (roundTimer <= 0) {
+                handleRoundEnd();
+              }
+            }
+          }
+
+          // Atualiza lutadores
+          const p1In = getP1Input();
+          const p2In = (gameMode === '2P') ? getP2Input() : getCPUInput(fighter2, fighter1);
+
+          fighter1.update(fighter2, p1In);
+          fighter2.update(fighter1, p2In);
+
+          // Atualiza projéteis especiais e verifica colisão
+          for (let i = projectiles.length - 1; i >= 0; i--) {
+            const p = projectiles[i];
+            p.x += p.vx;
+            p.life--;
+
+            const target = p.owner === fighter1 ? fighter2 : fighter1;
+            const dist = Math.abs(p.x - target.x);
+            const dy = Math.abs(p.y - (target.y - 75));
+
+            if (dist < p.radius + 32 && dy < 72) {
+              target.receiveHit(p.damage, p.owner, 13);
+              spawnParticles(p.x, p.y, p.color, 22);
+              projectiles.splice(i, 1);
+              continue;
+            }
+
+            if (p.life <= 0 || p.x < -80 || p.x > w + 80) {
+              projectiles.splice(i, 1);
+            }
+          }
+
+          // Verifica nocaute (HP zerado)
+          if (fighter1.hp <= 0 || fighter2.hp <= 0) {
+            handleRoundEnd();
+          }
+
+          updateHUD();
+        } else if (roundState === 'ROUND_OVER') {
+          stateTimer--;
+          if (stateTimer <= 0) {
+            proceedAfterRoundOver();
+          }
+        }
+
+        // Atualiza partículas e textos flutuantes
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const pt = particles[i];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.vy += 0.25;
+          pt.life--;
+          if (pt.life <= 0) particles.splice(i, 1);
+        }
+
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+          const ft = floatingTexts[i];
+          ft.y -= 1.2;
+          ft.life--;
+          if (ft.life <= 0) floatingTexts.splice(i, 1);
+        }
+      }
+
+      // Renderização da Arena, Lutadores e Efeitos
+      ctx.save();
+      if (screenShake > 0) {
+        const sx = (Math.random() - 0.5) * screenShake * 1.6;
+        const sy = (Math.random() - 0.5) * screenShake * 1.6;
+        ctx.translate(sx, sy);
+        screenShake--;
+      }
+
+      drawArenaBackground(ctx, w, h);
+      drawFighter(ctx, fighter1);
+      drawFighter(ctx, fighter2);
+      drawProjectiles(ctx);
+
+      // Partículas
+      particles.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.life / 30);
+        ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+        ctx.restore();
+      });
+
+      // Textos flutuantes de dano, Parry, Exausto e Escudo
+      floatingTexts.forEach(ft => {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, ft.life / 20);
+        ctx.font = '900 22px Impact, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 5;
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    /* ========================================================================
+       10. ESPETÁCULO DE FOGOS DE ARTIFÍCIO (CELEBRAÇÃO DO JOGO PRONTO)
+       ======================================================================== */
+    let fireworkRockets = [];
+    let fireworkSparks = [];
+    let fireworksEndTime = 0;
+
+    function spawnFireworkRocket(w, h) {
+      const brasilColors = ['#009c3b', '#ffdf00', '#00f0ff', '#ffffff', '#ef4444', '#a855f7'];
+      fireworkRockets.push({
+        x: w * (0.15 + Math.random() * 0.7),
+        y: h + 10,
+        vx: (Math.random() - 0.5) * 3.2,
+        vy: -(11 + Math.random() * 4.5),
+        targetY: h * (0.14 + Math.random() * 0.34),
+        color: brasilColors[Math.floor(Math.random() * brasilColors.length)]
+      });
+    }
+
+    function explodeFirework(rocket) {
+      SoundFX.fireworkPop();
+      const palette = [rocket.color, '#ffdf00', '#ffffff', '#00f0ff', '#22c55e'];
+      const count = 58;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.15;
+        const speed = 2.2 + Math.random() * 5.8;
+        fireworkSparks.push({
+          x: rocket.x,
+          y: rocket.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: palette[i % palette.length],
+          alpha: 1,
+          decay: 0.013 + Math.random() * 0.012,
+          size: 2.5 + Math.random() * 2.5
+        });
+      }
+    }
+
+    function launchFireworksShow(durationMs = 4200) {
+      SoundFX.init();
+      fireworksEndTime = Math.max(fireworksEndTime, Date.now() + durationMs);
+      const fwCanvas = document.getElementById('fireworks-canvas');
+      if (fwCanvas) {
+        fwCanvas.width = window.innerWidth;
+        fwCanvas.height = window.innerHeight;
+        for (let i = 0; i < 4; i++) {
+          spawnFireworkRocket(fwCanvas.width, fwCanvas.height);
+        }
+      }
+    }
+
+    function updateAndDrawFireworks() {
+      requestAnimationFrame(updateAndDrawFireworks);
+      const fwCanvas = document.getElementById('fireworks-canvas');
+      if (!fwCanvas) return;
+
+      if (fwCanvas.width !== window.innerWidth || fwCanvas.height !== window.innerHeight) {
+        fwCanvas.width = window.innerWidth;
+        fwCanvas.height = window.innerHeight;
+      }
+
+      const fctx = fwCanvas.getContext('2d');
+      fctx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+
+      const now = Date.now();
+      if (now < fireworksEndTime && Math.random() < 0.085) {
+        spawnFireworkRocket(fwCanvas.width, fwCanvas.height);
+      }
+
+      for (let i = fireworkRockets.length - 1; i >= 0; i--) {
+        const r = fireworkRockets[i];
+        r.x += r.vx;
+        r.y += r.vy;
+        r.vy += 0.14;
+
+        fctx.fillStyle = r.color;
+        fctx.beginPath();
+        fctx.arc(r.x, r.y, 4, 0, Math.PI * 2);
+        fctx.fill();
+
+        if (r.y <= r.targetY || r.vy >= 0) {
+          explodeFirework(r);
+          fireworkRockets.splice(i, 1);
+        }
+      }
+
+      for (let i = fireworkSparks.length - 1; i >= 0; i--) {
+        const s = fireworkSparks[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vx *= 0.97;
+        s.vy = s.vy * 0.97 + 0.09;
+        s.alpha -= s.decay;
+
+        if (s.alpha <= 0) {
+          fireworkSparks.splice(i, 1);
+          continue;
+        }
+
+        fctx.save();
+        fctx.globalAlpha = s.alpha;
+        fctx.fillStyle = s.color;
+        fctx.beginPath();
+        fctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        fctx.fill();
+        fctx.restore();
+      }
+    }
+
+    // Inicialização segura ao carregar a janela
+    window.onload = function () {
+      buildPortraitCache();
+      buildArenaThumbnails();
+      buildRosterGrid();
+      updateSelectionUI();
+      setupTouchButtons();
+      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(updateAndDrawFireworks);
+      // Dispara fogos de comemoração assim que o jogo abre!
+      setTimeout(() => launchFireworksShow(3800), 250);
+    };
+  </script>
+</body>
+</html>
