@@ -593,10 +593,80 @@
       min-height: 0;
     }
 
-    @media (max-width: 920px) {
+    @media (max-width: 560px) {
       .select-workspace {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         overflow-y: auto;
+      }
+      .roster-container {
+        grid-column: 1 / -1;
+        order: -1;
+        max-height: 220px;
+      }
+    }
+
+    body.mobile-mode #select-screen,
+    body.mobile-mode #map-select-screen {
+      padding: 6px 8px;
+      gap: 5px;
+    }
+
+    body.mobile-mode .select-header,
+    body.mobile-mode .map-matchup-strip {
+      padding: 5px 10px;
+    }
+
+    body.mobile-mode .select-header-center h2 {
+      font-size: 1rem;
+    }
+
+    body.mobile-mode .select-header-center p {
+      font-size: 0.7rem;
+    }
+
+    @media (min-width: 561px) {
+      body.mobile-mode .select-workspace {
+        grid-template-columns: 168px 1fr 168px;
+        gap: 6px;
+      }
+      body.mobile-mode .preview-panel {
+        padding: 6px;
+        gap: 3px;
+      }
+      body.mobile-mode .preview-canvas {
+        width: 74px;
+        height: 76px;
+      }
+      body.mobile-mode .pixel-badge {
+        width: 36px;
+        height: 36px;
+      }
+      body.mobile-mode .preview-name {
+        font-size: 0.96rem;
+      }
+      body.mobile-mode .preview-title,
+      body.mobile-mode .preview-special {
+        font-size: 0.65rem;
+        padding: 2px 4px;
+      }
+      body.mobile-mode .stat-row {
+        font-size: 0.64rem;
+      }
+      body.mobile-mode .roster-container {
+        max-height: none;
+        padding: 6px;
+      }
+      body.mobile-mode .roster-grid {
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: 5px;
+      }
+      body.mobile-mode .select-bottom-bar {
+        padding: 5px 10px;
+        gap: 6px;
+      }
+      body.mobile-mode .option-chip {
+        padding: 4px 8px;
+        font-size: 0.72rem;
       }
     }
 
@@ -609,10 +679,42 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: box-shadow 0.15s ease, transform 0.12s ease;
     }
 
     .preview-panel.p2 {
       border-color: #eab308;
+    }
+
+    .preview-panel.active-picker {
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.55);
+    }
+
+    .preview-panel.p2.active-picker {
+      box-shadow: 0 0 18px rgba(255, 223, 0, 0.55);
+    }
+
+    .picker-toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      background: #1e293b;
+      border: 2px solid #00f0ff;
+      color: #00f0ff;
+      border-radius: 999px;
+      padding: 3px 12px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .picker-toggle-pill.p2-turn {
+      border-color: #ffdf00;
+      color: #ffdf00;
     }
 
     .preview-tag {
@@ -716,6 +818,7 @@
       border-radius: 16px;
       padding: 8px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       max-height: 410px;
     }
 
@@ -736,6 +839,7 @@
       align-items: center;
       gap: 3px;
       cursor: pointer;
+      touch-action: manipulation;
       transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
     }
 
@@ -924,11 +1028,25 @@
       min-height: 0;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 560px) {
       .map-workspace {
         grid-template-columns: 1fr;
         overflow-y: auto;
       }
+    }
+
+    body.mobile-mode .map-live-panel {
+      padding: 6px 10px;
+      gap: 4px;
+    }
+
+    body.mobile-mode .map-live-canvas {
+      max-height: 145px;
+    }
+
+    body.mobile-mode .map-grid-panel {
+      max-height: none;
+      padding: 6px;
     }
 
     .map-live-panel {
@@ -1824,15 +1942,16 @@
       <button class="btn-arcade btn-secundario" onclick="SoundFX.click(); showScreen('start-screen')">⬅️ LOBBY</button>
       <div class="select-header-center">
         <h2 id="select-mode-title">🕹️ 1 JOGADOR: ESCOLHA OS LUTADORES</h2>
-        <p id="select-turn-hint">Clique = J1 | Shift/Botão Direito = CPU | ENTER = Avançar!</p>
+        <p id="select-turn-hint">Toque em um lutador abaixo para selecionar!</p>
+        <button id="btn-picker-target" class="picker-toggle-pill" onclick="toggleActivePicker()">🎯 SELECIONANDO: 🔵 JOGADOR 1 (TOQUE P/ TROCAR)</button>
       </div>
       <button class="btn-arcade btn-roxo" onclick="randomizeFighters()">🎲 ALEATÓRIO</button>
     </div>
 
     <div class="select-workspace">
       <!-- Prévia J1 -->
-      <div class="preview-panel p1">
-        <div class="preview-tag">JOGADOR 1</div>
+      <div id="p1-panel-normal" class="preview-panel p1 active-picker" onclick="setActivePicker('P1')">
+        <div class="preview-tag">🔵 JOGADOR 1</div>
         <div class="preview-canvas-row">
           <canvas id="p1-preview-canvas" class="preview-canvas" width="118" height="122"></canvas>
           <canvas id="p1-pixel-badge" class="pixel-badge" width="46" height="46"></canvas>
@@ -1853,8 +1972,8 @@
       </div>
 
       <!-- Prévia J2 / CPU -->
-      <div id="p2-panel-normal" class="preview-panel p2">
-        <div class="preview-tag" id="p2-preview-tag">CPU (J2)</div>
+      <div id="p2-panel-normal" class="preview-panel p2" onclick="setActivePicker('P2')">
+        <div class="preview-tag" id="p2-preview-tag">🟡 CPU (J2)</div>
         <div class="preview-canvas-row">
           <canvas id="p2-preview-canvas" class="preview-canvas" width="118" height="122"></canvas>
           <canvas id="p2-pixel-badge" class="pixel-badge" width="46" height="46"></canvas>
@@ -3976,29 +4095,46 @@
     let gameMode = '1P';
     let selectedP1 = 0;
     let selectedP2 = 1;
-    let nextPickIsP2 = false;
+    let activePicker = 'P1';
     let selectedArena = 'copacabana';
     let activeBattleArena = 'copacabana';
     let selectedRoundTime = 60;
     let cpuDifficulty = 'normal';
 
     const CPU_DIFF_CONFIG = {
-      facil:    { label: 'Fácil',    desc: 'Reação lenta, ideal para treinar', reactEvery: 22, aggro: 0.35, blockChance: 0.15, parryChance: 0.02, specialChance: 0.25 },
-      normal:   { label: 'Normal',   desc: 'Equilibrado e divertido',          reactEvery: 13, aggro: 0.58, blockChance: 0.35, parryChance: 0.10, specialChance: 0.55 },
-      dificil:  { label: 'Difícil',  desc: 'Agressivo, defende e pune erros',  reactEvery: 7,  aggro: 0.78, blockChance: 0.60, parryChance: 0.24, specialChance: 0.82 },
-      lendario: { label: 'Lendário', desc: 'Reflexos de ADM, combos e parry!', reactEvery: 3,  aggro: 0.92, blockChance: 0.80, parryChance: 0.42, specialChance: 0.96 }
+      facil: {
+        label: 'Fácil',
+        desc: 'CPU tranquila para treinar golpes',
+        reactEvery: 18,
+        aggro: 0.35,
+        blockChance: 0.2,
+        specialChance: 0.35
+      },
+      normal: {
+        label: 'Normal',
+        desc: 'Equilibrado e divertido',
+        reactEvery: 11,
+        aggro: 0.58,
+        blockChance: 0.45,
+        specialChance: 0.65
+      },
+      dificil: {
+        label: 'Difícil',
+        desc: 'Reação rápida e combos fortes',
+        reactEvery: 7,
+        aggro: 0.78,
+        blockChance: 0.7,
+        specialChance: 0.85
+      },
+      lendario: {
+        label: 'Lendário',
+        desc: 'Reflexos supremos e parry mortal!',
+        reactEvery: 4,
+        aggro: 0.92,
+        blockChance: 0.88,
+        specialChance: 0.98
+      }
     };
-
-    function isFighterUnlocked(fighter) {
-      if (!fighter || !fighter.secret) return true;
-      return !!unlockedSecrets[fighter.id];
-    }
-
-    function getUnlockedFighterIndices() {
-      return FIGHTERS_DATA
-        .map((f, idx) => (isFighterUnlocked(f) ? idx : -1))
-        .filter(idx => idx !== -1);
-    }
 
     let towerState = {
       active: false,
@@ -4008,22 +4144,35 @@
     };
 
     function clearAllInputs() {
-      Object.keys(keysDown).forEach(k => { keysDown[k] = false; });
+      Object.keys(keysDown).forEach(k => {
+        keysDown[k] = false;
+      });
       activeTouchMap.clear();
-      document.querySelectorAll('.touch-btn').forEach(b => b.classList.remove('pressed'));
+      document.querySelectorAll('.touch-btn.pressed').forEach(btn => {
+        btn.classList.remove('pressed');
+      });
     }
 
     function showScreen(screenId) {
       clearAllInputs();
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       const target = document.getElementById(screenId);
-      if (target) target.classList.add('active');
-      currentScreen = screenId;
-
-      const bgCanvas = document.getElementById('menu-bg-canvas');
-      if (bgCanvas) {
-        bgCanvas.style.display = (screenId === 'platform-screen' || screenId === 'start-screen') ? 'block' : 'none';
+      if (target) {
+        target.classList.add('active');
+        currentScreen = screenId;
       }
+    }
+
+    function isFighterUnlocked(f) {
+      if (!f) return false;
+      if (!f.secret) return true;
+      return !!unlockedSecrets[f.id];
+    }
+
+    function getUnlockedFighterIndices() {
+      return FIGHTERS_DATA
+        .map((f, idx) => (isFighterUnlocked(f) ? idx : -1))
+        .filter(idx => idx !== -1);
     }
 
     function toggleFullscreen() {
@@ -4101,10 +4250,25 @@
     function goToSelect(mode) {
       SoundFX.click();
       gameMode = mode;
-      nextPickIsP2 = false;
+      activePicker = 'P1';
       buildRosterGrid();
       updateSelectionUI();
       showScreen('select-screen');
+    }
+
+    function setActivePicker(slot) {
+      if (gameMode === 'TOWER') {
+        activePicker = 'P1';
+        return;
+      }
+      SoundFX.click();
+      activePicker = slot;
+      updateSelectionUI();
+    }
+
+    function toggleActivePicker() {
+      if (gameMode === 'TOWER') return;
+      setActivePicker(activePicker === 'P1' ? 'P2' : 'P1');
     }
 
     function selectCpuDifficulty(diff) {
@@ -4177,18 +4341,16 @@
           SoundFX.click();
           if (gameMode === 'TOWER') {
             selectedP1 = idx;
-          } else if (e.shiftKey) {
+          } else if (e.shiftKey || activePicker === 'P2') {
             selectedP2 = idx;
-          } else if (gameMode === '2P') {
-            if (!nextPickIsP2) {
-              selectedP1 = idx;
-              nextPickIsP2 = true;
-            } else {
-              selectedP2 = idx;
-              nextPickIsP2 = false;
+            if (gameMode === '2P') {
+              activePicker = 'P1';
             }
           } else {
             selectedP1 = idx;
+            if (gameMode === '2P') {
+              activePicker = 'P2';
+            }
           }
           updateSelectionUI();
         });
@@ -4345,42 +4507,65 @@
       document.getElementById('p2-stat-def').style.width = `${f2.def}%`;
       drawPixelPortraitToCanvas(f2.id, document.getElementById('p2-pixel-badge'));
 
+      const p1Panel = document.getElementById('p1-panel-normal');
       const p2Normal = document.getElementById('p2-panel-normal');
       const p2Tower = document.getElementById('p2-panel-tower');
       const cpuBox = document.getElementById('cpu-diff-box');
       const titleEl = document.getElementById('select-mode-title');
       const btnConfirm = document.getElementById('btn-confirm-select');
       const hintEl = document.getElementById('select-turn-hint');
+      const pickerPill = document.getElementById('btn-picker-target');
 
       hintEl.style.color = '#94a3b8';
 
       if (gameMode === 'TOWER') {
+        activePicker = 'P1';
         titleEl.textContent = '🏰 MODO TORRE: ESCOLHA SEU DESAFIANTE';
+        if (p1Panel) p1Panel.classList.add('active-picker');
         p2Normal.style.display = 'none';
         p2Tower.style.display = 'flex';
+        if (pickerPill) pickerPill.style.display = 'none';
         document.getElementById('tower-lore-fighter-title').textContent = `História de ${f1.name}:`;
         document.getElementById('tower-lore-text').textContent = f1.storyIntro;
         cpuBox.classList.remove('disabled-box');
         btnConfirm.textContent = '🏰 ENTRAR NA TORRE';
-        hintEl.textContent = 'Clique no lutador (ou aperte ENTER) para escalar os 5 degraus';
+        hintEl.textContent = 'Toque no lutador desejado e depois em Entrar na Torre!';
       } else if (gameMode === '2P') {
-        titleEl.textContent = '👥 2 JOGADORES: ESCOLHAM LUTADORES E TEMPO';
+        titleEl.textContent = '👥 2 JOGADORES: ESCOLHAM OS LUTADORES';
         p2Normal.style.display = 'flex';
         p2Tower.style.display = 'none';
-        document.getElementById('p2-preview-tag').textContent = 'JOGADOR 2';
+        if (p1Panel) p1Panel.classList.toggle('active-picker', activePicker === 'P1');
+        p2Normal.classList.toggle('active-picker', activePicker === 'P2');
+        document.getElementById('p2-preview-tag').textContent = '🟡 JOGADOR 2';
+        if (pickerPill) {
+          pickerPill.style.display = 'inline-flex';
+          pickerPill.classList.toggle('p2-turn', activePicker === 'P2');
+          pickerPill.textContent = activePicker === 'P2'
+            ? '🎯 ESCOLHENDO: 🟡 JOGADOR 2 (TOQUE P/ J1)'
+            : '🎯 ESCOLHENDO: 🔵 JOGADOR 1 (TOQUE P/ J2)';
+        }
         cpuBox.classList.add('disabled-box');
         btnConfirm.textContent = 'AVANÇAR ➡️';
-        hintEl.textContent = nextPickIsP2
-          ? '🟡 Agora clique para escolher o JOGADOR 2 (ENTER para avançar)'
-          : '🔵 Clique para escolher J1 (Shift/Botão Direito p/ J2 • ENTER p/ avançar)';
+        hintEl.textContent = activePicker === 'P2'
+          ? '🟡 Toque em um lutador para o JOGADOR 2!'
+          : '🔵 Toque em um lutador para o JOGADOR 1!';
       } else {
-        titleEl.textContent = '🕹️ 1 JOGADOR: ESCOLHA LUTADORES, TEMPO E CPU';
+        titleEl.textContent = '🕹️ 1 JOGADOR: ESCOLHA OS LUTADORES';
         p2Normal.style.display = 'flex';
         p2Tower.style.display = 'none';
-        document.getElementById('p2-preview-tag').textContent = 'CPU (J2)';
+        if (p1Panel) p1Panel.classList.toggle('active-picker', activePicker === 'P1');
+        p2Normal.classList.toggle('active-picker', activePicker === 'P2');
+        document.getElementById('p2-preview-tag').textContent = '🟡 CPU (J2)';
+        if (pickerPill) {
+          pickerPill.style.display = 'inline-flex';
+          pickerPill.classList.toggle('p2-turn', activePicker === 'P2');
+          pickerPill.textContent = activePicker === 'P2'
+            ? '🎯 ESCOLHENDO: 🟡 OPONENTE CPU (TOQUE P/ J1)'
+            : '🎯 ESCOLHENDO: 🔵 JOGADOR 1 (TOQUE P/ CPU)';
+        }
         cpuBox.classList.remove('disabled-box');
         btnConfirm.textContent = 'AVANÇAR ➡️';
-        hintEl.textContent = 'Clique = J1 | Shift/Botão Direito = CPU | ENTER = Avançar!';
+        hintEl.textContent = 'Toque no botão acima ou nos painéis laterais para trocar entre J1 e CPU!';
       }
 
       document.querySelectorAll('#roster-grid .fighter-card').forEach((card, idx) => {
