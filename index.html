@@ -360,6 +360,7 @@
       gap: 8px;
       width: 100%;
     }
+
     /* Adaptações da Versão Celular (body.mobile-mode) */
     body.mobile-mode #start-screen {
       padding: 6px 12px;
@@ -1853,7 +1854,7 @@
 
       <!-- Prévia J2 / CPU -->
       <div id="p2-panel-normal" class="preview-panel p2">
-        <div id="p2-preview-tag" class="preview-tag">CPU (J2)</div>
+        <div class="preview-tag" id="p2-preview-tag">CPU (J2)</div>
         <div class="preview-canvas-row">
           <canvas id="p2-preview-canvas" class="preview-canvas" width="118" height="122"></canvas>
           <canvas id="p2-pixel-badge" class="pixel-badge" width="46" height="46"></canvas>
@@ -4167,7 +4168,7 @@
             SoundFX.shieldBlock();
             const hint = document.getElementById('select-turn-hint');
             if (hint) {
-              hint.textContent = '🔒 Lutador Secreto! Volte ao Menu e abra 🔐 ??? para digitar o código!';
+              hint.textContent = '🔒 Lutador Secreto! Volte ao Menu e abra ⚙️ Configurações ➔ 🔐 ??? para digitar o código!';
               hint.style.color = '#facc15';
             }
             return;
